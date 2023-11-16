@@ -11,9 +11,6 @@ class BlockChain:
         self.blockchain = {
             "version": 1,
             "blocks": [],
-            "tokens": [],
-            "users": [],
-            "mints": []
         }
 
     def load(self, filename="blockchain.json"):
@@ -46,31 +43,28 @@ class BlockChain:
         except IndexError:
             return 0
 
-    def validate(self):
-        print("Test")
+    def validate(self, test):
         # validate hashes
         for i in range(len(self.blockchain["blocks"])):
             one: dict = self.blockchain["blocks"][i]
-            try:
-                if one["id"] != 1:
-                    if one["hash"] != self.blockchain["blocks"][i-1]["previous_block_hash"]:
-                        print("one[\"has\"] != two[\"previous_block_hash\"]")
-                        return False
-            except IndexError:
-                pass
-
-            print("log start")
-            print(utils.get_hash_dict(one))
-            print(one["hash"])
-            print("log stop")
-            if utils.get_hash_dict(NewBlock(
+            block_object = NewBlock(
                                 id=one["id"],
                                 transactions=[Transaction.from_dict(i) for i in one["transactions"]],
                                 previous_block_hash=one["previous_block_hash"],
                                 mints=[Mint.from_dict(i) for i in one["mints"]],
                                 hash=one["hash"],
                                 nonce=one["nonce"],
-                                tokens=[NewToken.from_dict(i) for i in one["tokens"]]).serialize()) != one["hash"]:
+                                tokens=[NewToken.from_dict(i) for i in one["tokens"]])
+            try:
+                if one["id"] != 1:
+                    if block_object.hash != self.blockchain["blocks"][i+1]["previous_block_hash"]:
+                        print("one[\"hash\"] != two[\"previous_block_hash\"]")
+                        return False
+            except IndexError:
+                pass
+
+            print("log stop")
+            if utils.get_hash(block_object) != one["hash"]:
                 print("get_hash(one) != one[\"hash\"]")
 
                 return False

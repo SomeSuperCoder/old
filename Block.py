@@ -19,9 +19,9 @@ class NewBlock:
         if not strict:
             return json.dumps({
                 "id": self.id,
-                "transactions": [json.loads(i.serialize()) for i in self.transactions],
-                "tokens": [json.loads(i.serialize()) for i in self.tokens],
-                "mints": [json.loads(i.serialize()) for i in self.mints],
+                "transactions": [json.loads(i.serialize(True)) for i in self.transactions],
+                "tokens": [json.loads(i.serialize(True)) for i in self.tokens],
+                "mints": [json.loads(i.serialize(True)) for i in self.mints],
                 "previous_block_hash": self.previous_block_hash,
                 "nonce": self.nonce
             })

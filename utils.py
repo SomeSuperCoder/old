@@ -68,18 +68,15 @@ def increment_mine(target):
     hash = get_hash(target)
 
     while hash[:config.strict] != "0"*config.strict:
-        hash = get_hash(target)
-        # print(hash)
         target.nonce += 1
+        hash = get_hash(target)
 
     print(hash)
     target.hash = hash
 
 
 def get_hash(target):
-    return binascii.hexlify(hashlib.sha256(target.serialize().encode()).digest()).decode()
-
-
-def get_hash_dict(target):
-    return binascii.hexlify(hashlib.sha256(json.dumps(target).encode()).digest()).decode()
-
+    return binascii.hexlify(
+        hashlib.sha256(
+            target.serialize(False).encode()
+                       ).digest()).decode()
