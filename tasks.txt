@@ -1,0 +1,5 @@
+Tasks:
+1) from_dict everything!
+2) Fix broken sender_key in Transaction(string it)
+3) Add initial amount to token (I think max_supply should do that!)
+4) Mint must store owner public key
