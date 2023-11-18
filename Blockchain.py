@@ -43,7 +43,7 @@ class BlockChain:
         except IndexError:
             return 0
 
-    def validate(self, test):
+    def validate(self):
         # validate hashes
         for i in range(len(self.blockchain["blocks"])):
             one: dict = self.blockchain["blocks"][i]
@@ -63,10 +63,12 @@ class BlockChain:
             except IndexError:
                 pass
 
-            print("log stop")
             if utils.get_hash(block_object) != one["hash"]:
                 print("get_hash(one) != one[\"hash\"]")
 
                 return False
+
+            for i in block_object.transactions:
+                pass
 
         return True

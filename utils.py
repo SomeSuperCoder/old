@@ -3,7 +3,7 @@ import hashlib
 import base58
 import config
 import binascii
-import json
+import base64
 
 
 def string_to_private_key(string):
@@ -68,6 +68,7 @@ def increment_mine(target):
     hash = get_hash(target)
 
     while hash[:config.strict] != "0"*config.strict:
+        print(hash)
         target.nonce += 1
         hash = get_hash(target)
 
@@ -80,3 +81,21 @@ def get_hash(target):
         hashlib.sha256(
             target.serialize(False).encode()
                        ).digest()).decode()
+
+
+def sign(private_key, target):
+    signature = private_key.sign(target.serialize().encode())
+    signature_string = base64.b64encode(signature).decode()
+
+    target.signature = signature_string
+
+
+def verify(target):
+    try:
+        signature_bytes = base64.b64decode(target.signature.encode())
+
+        is_valid = target.public_key.verify(signature_bytes, target.serialize().encode())
+
+        return is_valid
+    except ecdsa.BadSignatureError:
+        return False

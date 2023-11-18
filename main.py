@@ -1,3 +1,5 @@
+import ecdsa.ecdsa
+
 from Blockchain import BlockChain
 from Block import NewBlock
 from Transaction import Transaction
@@ -9,16 +11,21 @@ import utils
 blockchain = BlockChain()
 blockchain.load()
 
-private_key = utils.string_to_private_key("aboba")
+private_key = utils.string_to_private_key("aaa")
 
-transaction = Transaction("abc", "123", 10, "")
-transaction.sign(private_key)
+transaction = Transaction(private_key.get_verifying_key(), "123", 10, "")
+utils.sign(private_key, transaction)
+print(utils.verify(transaction))
 
-token = NewToken("Test", "TST", utils.generate_address(private_key.get_verifying_key()))
-token.sign(private_key)
+
+token = NewToken("Test", "TST", private_key.get_verifying_key())
+utils.sign(private_key, token)
+print(utils.verify(token))
+
 
 mint = Mint(amount=10, token_address=token.address)
-mint.sign(private_key=private_key)
+utils.sign(private_key, mint)
+print(utils.verify(mint))
 
 block = NewBlock(blockchain.get_latest_id()+1, transactions=[transaction], tokens=[token], mints=[mint], previous_block_hash=blockchain.get_latest_hash())
 utils.increment_mine(block)
@@ -28,4 +35,4 @@ blockchain.save()
 
 print(blockchain.blockchain)
 
-print(blockchain.validate(block))
+print(blockchain.validate())
