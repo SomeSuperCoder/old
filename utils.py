@@ -1,6 +1,7 @@
 import ecdsa
 import hashlib
 import base58
+
 import config
 import binascii
 import base64
@@ -61,7 +62,7 @@ def generate_token_address(token):
     # Step 7: Encode the address bytes using Base58 encoding
     bitcoin_address = base58.b58encode(address_bytes)
 
-    token.address = bitcoin_address.decode()
+    return bitcoin_address.decode()
 
 
 def increment_mine(target):
@@ -99,3 +100,25 @@ def verify(target):
         return is_valid
     except ecdsa.BadSignatureError:
         return False
+
+
+def send_token(private_key: str | ecdsa.SigningKey, receiver_id: str, amount: float, token=""):
+    from Transaction import Transaction
+    tmp = Transaction(public_key=private_key.get_verifying_key(), receiver_id=receiver_id, amount=amount, token=token)
+    sign(private_key, tmp)
+    return tmp
+
+
+def get_token_balance(blockchain, token, address):
+    balance = 0
+    mints = []
+    for i in blockchain.blockchain["blocks"]:
+        for j in i["mints"]:
+            mints.append(j)
+
+    print(mints)
+    for i in mints:
+        if i["token_address"] == token.address:
+            balance += i["amount"]
+
+    print(balance)

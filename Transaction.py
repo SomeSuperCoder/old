@@ -33,4 +33,5 @@ class Transaction:
 
     @staticmethod
     def from_dict(source):
+        print(type(source))
         return Transaction(public_key=source["public_key"], receiver_id=source["receiver_id"], amount=source["amount"], token=source["token"], signature=source["signature"])

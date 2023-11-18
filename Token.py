@@ -4,7 +4,6 @@ import ecdsa
 import utils
 import hashlib
 
-from Transaction import Transaction
 
 class NewToken:
     def __init__(self, name: str, symbol: str, public_key: str | ecdsa.VerifyingKey, burn=0, commision=0, mintable=False, decimals=2, max_supply=math.inf, attach_file_url="", signature=None):
@@ -21,6 +20,7 @@ class NewToken:
         else:
             self.public_key = public_key
         self.address = utils.generate_token_address(self)
+        print(f"MY TOKEN ADDRESS IS: {self.address}")
         self.signature = signature
 
     def serialize(self, strict=False):
@@ -52,18 +52,20 @@ class NewToken:
             })
 
     def send(self, private_key: ecdsa.SigningKey, receiver_id, amount: float):
-        transaction = Transaction(public_key=utils.generate_address(private_key.get_verifying_key()), receiver_id=receiver_id, amount=amount, token=self.symbol)
+        from Transaction import Transaction
+
+        transaction = Transaction(public_key=utils.generate_address(private_key.get_verifying_key()), receiver_id=receiver_id, amount=amount, token=self.address)
         utils.sign(private_key, transaction)
         return transaction
 
-    def balance(self, address, blockchain):
-        balance = 0
-
-        for i in blockchain.mints:
-            if i["symbol"] == self.symbol and i[""]:
-                balance += i["amount"]
-
-        return round(balance, self.decimals)
+    # def balance(self, address, blockchain):
+    #     balance = 0
+    #
+    #     for i in blockchain.mints:
+    #         if i["symbol"] == self.symbol and i[""]:
+    #             balance += i["amount"]
+    #
+    #     return round(balance, self.decimals)
 
     @staticmethod
     def from_dict(source):

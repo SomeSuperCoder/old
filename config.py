@@ -1,1 +1,1 @@
-strict = 4
+strict = 0

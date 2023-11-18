@@ -23,7 +23,7 @@ utils.sign(private_key, token)
 print(utils.verify(token))
 
 
-mint = Mint(amount=10, token_address=token.address)
+mint = Mint(amount=10, token_address=token.address, public_key=private_key.get_verifying_key())
 utils.sign(private_key, mint)
 print(utils.verify(mint))
 
@@ -36,3 +36,5 @@ blockchain.save()
 print(blockchain.blockchain)
 
 print(blockchain.validate())
+
+utils.get_token_balance(blockchain, token, utils.generate_address(private_key.get_verifying_key()))
