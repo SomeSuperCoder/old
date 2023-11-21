@@ -1,3 +1,13 @@
 Tasks:
-2) Fix broken sender_key in Transaction(string it)
-4) Mint must store owner public key
+5) Add tokens in to utils.get_all_unspent_transactions()
+7) Fix negative number issue
+9) Save public key as der in base64
+10) Check transaction outputs, so they are not negative and follow token rules
+11) Advanced token sending and validating
+13) (Optional) BACKUP EVERYTHING BEFORE DOING THIS! Store new tokens in transactions. Warning: THIS IS HARD! Or you can just add them in to the existing transaction methods
+12) Create a function for the miners to check if a transaction is not fraudulent
+13) Try except everything!
+14) Try crashing the program do all test, also ask others to try do that
+15) Make the serialize strict funtion work normal
+
+12) Create output types: send, reward, burn, commission, fee, mint. Maby add Input types too?

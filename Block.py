@@ -3,12 +3,14 @@ import json
 from Transaction import Transaction
 from Token import NewToken
 from Mint import Mint
+from Transaction import Transaction
+from typing import List
 
 
 class NewBlock:
     def __init__(self, id: int, transactions: list, tokens: list, mints: list, previous_block_hash: str, hash=None, nonce=0):
         self.id = id
-        self.transactions = transactions
+        self.transactions: List[Transaction] = transactions
         self.tokens = tokens
         self.mints = mints
         self.previous_block_hash = previous_block_hash
@@ -38,14 +40,13 @@ class NewBlock:
 
     @staticmethod
     def from_dict(source):
-        NewBlock(id=source["id"],
-                 previous_block_hash=source["previous_block_hash"],
-                 hash=source["hash"],
-                 nonce=source["nonce"],
-                 transactions=[Transaction.from_dict(i) for i in source["transactions"]],
-                 tokens=[NewToken.from_dict(i) for i in source["transactions"]],
-                 mints=[Mint.from_dict(i) for i in source["mints"]])
-
+        return NewBlock(id=source["id"],
+                            transactions=[Transaction.from_dict(i) for i in source["transactions"]],
+                            previous_block_hash=source["previous_block_hash"],
+                            mints=[Mint.from_dict(i) for i in source["mints"]],
+                            hash=source["hash"],
+                            nonce=source["nonce"],
+                            tokens=[NewToken.from_dict(i) for i in source["tokens"]])
 
 # class ExistingBlock:
 #     def __init__(self, id: int, transactions: list, hash: str, previous_block_hash: str, nonce: int):

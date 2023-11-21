@@ -5,6 +5,8 @@ from Token import NewToken
 import json
 import utils
 import config
+import binascii
+import hashlib
 
 
 class BlockChain:
@@ -29,32 +31,30 @@ class BlockChain:
         self.blockchain["blocks"].append(json.loads(block.serialize(True)))
         self.save()
 
-    def add_user(self):
-        pass
-
     def get_latest_hash(self):
         try:
             return self.blockchain["blocks"][-1]["hash"]
-        except IndexError as e:
+        except IndexError:
             return "0"*64
 
-    def get_latest_id(self):
+    def get_latest_block_id(self):
         try:
             return self.blockchain["blocks"][-1]["id"]
         except IndexError:
             return 0
 
+    def get_latest_transaction_id(self):
+        try:
+            return NewBlock.from_dict(self.blockchain["blocks"][-1]).transactions[-1].id
+        except IndexError:
+            return 0
+
     def validate(self):
+        input_hash_list = []
+
         for i in range(len(self.blockchain["blocks"])):
             one: dict = self.blockchain["blocks"][i]
-            block_object = NewBlock(
-                                id=one["id"],
-                                transactions=[Transaction.from_dict(i) for i in one["transactions"]],
-                                previous_block_hash=one["previous_block_hash"],
-                                mints=[Mint.from_dict(i) for i in one["mints"]],
-                                hash=one["hash"],
-                                nonce=one["nonce"],
-                                tokens=[NewToken.from_dict(i) for i in one["tokens"]])
+            block_object = NewBlock.from_dict(one)
 
             # validate hashes
             try:
@@ -91,6 +91,14 @@ class BlockChain:
 
             # validate difficulty
             if block_object.hash[:config.strict] != "0" * config.strict:
+                return False
+
+            # check for input double usage
+            for tr in block_object.transactions:
+                for _in in tr.inputs:
+                    input_hash_list.append(binascii.hexlify(hashlib.sha256(_in.serialize().encode()).digest()).decode())
+
+            if len(input_hash_list) != len(set(input_hash_list)):
                 return False
 
         return True

@@ -19,7 +19,7 @@ class NewToken:
             self.public_key = ecdsa.VerifyingKey.from_pem(public_key)
         else:
             self.public_key = public_key
-        self.address = utils.generate_token_address(self)
+        self.address = utils.generate_serializable_address(self)
         print(f"MY TOKEN ADDRESS IS: {self.address}")
         self.signature = signature
 
@@ -50,22 +50,6 @@ class NewToken:
                 "address": self.address,
                 "signature": self.signature
             })
-
-    def send(self, private_key: ecdsa.SigningKey, receiver_id, amount: float):
-        from Transaction import Transaction
-
-        transaction = Transaction(public_key=utils.generate_address(private_key.get_verifying_key()), receiver_id=receiver_id, amount=amount, token=self.address)
-        utils.sign(private_key, transaction)
-        return transaction
-
-    # def balance(self, address, blockchain):
-    #     balance = 0
-    #
-    #     for i in blockchain.mints:
-    #         if i["symbol"] == self.symbol and i[""]:
-    #             balance += i["amount"]
-    #
-    #     return round(balance, self.decimals)
 
     @staticmethod
     def from_dict(source):
