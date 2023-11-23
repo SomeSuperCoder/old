@@ -2,6 +2,8 @@ from Block import NewBlock
 from Transaction import Transaction
 from Mint import Mint
 from Token import NewToken
+from Validator import Validator
+
 import json
 import utils
 import config
@@ -80,15 +82,6 @@ class BlockChain:
                 if not utils.verify(token):
                     return False
 
-            # # validate mints
-            # for mint in block_object.mints:
-            #     if not utils.verify(mint):
-            #         return False
-            #     array = [[token.address, token.public_key] for token in block_object.tokens]
-            #
-            #     if not any(item == [mint.token_address, mint.public_key] for item in array):
-            #         return False
-
             # validate difficulty
             if block_object.hash[:config.strict] != "0" * config.strict:
                 return False
@@ -103,7 +96,12 @@ class BlockChain:
 
             # validate emptiness
             if block_object.is_empty():
-                print("Block is empty")
+                print("Block is empty!")
+                return False
+
+            # validate only one reward
+            if not Validator.check_only_one_block_reward(block_object):
+                print("Block has more than one reward!")
                 return False
 
         return True

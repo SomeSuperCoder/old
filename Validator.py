@@ -1,3 +1,5 @@
+from Transaction import Transaction
+
 import utils
 
 
@@ -15,3 +17,15 @@ class Validator:
             return False
 
         return True
+
+    @staticmethod
+    def check_if_transaction_is_fraudulent(blockchain, transaction):
+        sored_by_token = utils.sort_outputs_by_token(transaction.outputs)
+        all_non_native = []
+        for token_address, outputs in sored_by_token.items():
+            for out in outputs:
+                if token_address != "":
+                    all_non_native.append(out)
+
+        print(sored_by_token)
+        print(all_non_native)

@@ -34,12 +34,12 @@ print(f"User address: {utils.generate_address(private_key.get_verifying_key())}"
 
 # block = NewBlock(blockchain.get_latest_block_id() + 1, transactions=[transaction], previous_block_hash=blockchain.get_latest_hash())
 # utils.random_mine(block)
-#
+
 # blockchain.add_block(block)
 # blockchain.save()
-#
-# print(blockchain.validate())
 
-print(utils.get_token_balance(blockchain, public_key))
+print(blockchain.validate())
+
+# print(utils.get_token_balance(blockchain, public_key))
 
 # print(f"Is empty: {transaction.is_empty()}")

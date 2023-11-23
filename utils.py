@@ -149,10 +149,10 @@ def get_all_unspent_outputs(blockchain):
             for _input in tr.inputs:
                 inputs.append(_input)
 
-    # print(inputs)
-    # print(outputs)
+    print(inputs)
+    print(outputs)
     for out_transaction_address, out_list in outputs.items():
-        # print(f"Processing {out_transaction_address}")
+        print(f"Processing {out_transaction_address}")
 
         for _in in inputs:
             if out_transaction_address == _in.transaction_address:
@@ -164,7 +164,7 @@ def get_all_unspent_outputs(blockchain):
         else:
             pre_result[out_transaction_address] = out_list
 
-    # print(pre_result)
+    print(pre_result)
 
     for address, pre_result_outputs in pre_result.items():
         index = 0
@@ -172,24 +172,41 @@ def get_all_unspent_outputs(blockchain):
             result.append([out, address, index])
             index += 1
     # do not use these prints
-    # print(f"result: {result}")
-    # print(f"result2: {[i.serialize() for i in result]}")
+    print(f"result: {result}")
+    print(f"result2: {[i[0].serialize() for i in result]}")
     return result
 
 
 def get_potential_inputs(blockchain, user_public_key, token_address="", target_amount=math.inf):
+    print("Begin get_potential_inputs")
     from Transaction import Input
     outputs_format = get_all_unspent_outputs(blockchain)
+    print(outputs_format)
+    print("="*10)
+    for i in outputs_format:
+        print(i[0].serialize())
+    print("="*10)
+
 
     current_amount = 0
     result = []
     for i in outputs_format:
+        print("For!")
+        print(current_amount)
+        print(target_amount)
+        print(current_amount >= target_amount)
         if current_amount >= target_amount:
-            # print("Breaking!")
+            print("Breaking!")
             break
+        print(f"To: {i[0].to}")
+        print(f"Address: {generate_address(user_public_key)}")
         if i[0].to == generate_address(user_public_key):
+            print("If1")
+            print(i[0].token_address)
+            print(token_address)
             if i[0].token_address == token_address:
                 result.append(Input(i[1], i[2]))
+                print("Append!")
                 current_amount += i[0].amount
 
     return result
@@ -222,7 +239,7 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
         for tk in blockchain.get_token_list():
             tk: NewToken = tk
             if tk.burn:
-                outputs.append(Output("", amount*tk.burn, token_address, "send"))
+                outputs.append(Output("", amount * tk.burn, token_address, "burn"))
             if tk.commission:
                 outputs.append(Output(generate_address(tk.public_key), amount * tk.commission, token_address, "commission"))
 
@@ -242,6 +259,7 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
 def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=""):
     balance = 0
     inputs = get_potential_inputs(blockchain, public_key, token_address)
+    print(inputs)
     for _in in inputs:
         out = input_to_output(blockchain, _in)
         if out.type not in ["burn", "gas"]:
@@ -282,6 +300,19 @@ def sort_outputs_by_type(data):
 
     for obj in data:
         obj_type = obj.type
+        if obj_type in result:
+            result[obj_type].append(obj)
+        else:
+            result[obj_type] = [obj]
+
+    return result
+
+
+def sort_outputs_by_token(data):
+    result = {}
+
+    for obj in data:
+        obj_type = obj.token_address
         if obj_type in result:
             result[obj_type].append(obj)
         else:
