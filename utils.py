@@ -1,8 +1,8 @@
 import ecdsa
 import hashlib
 import base58
+
 import config
-import binascii
 import base64
 import math
 import random
@@ -94,10 +94,7 @@ def random_mine(target):
 
 
 def get_hash(target):
-    return binascii.hexlify(
-        hashlib.sha256(
-            target.serialize(False).encode()
-                       ).digest()).decode()
+    return hashlib.sha256(target.serialize(False).encode()).hexdigest()
 
 
 def sign(private_key, target):
@@ -116,21 +113,6 @@ def verify(target):
         return is_valid
     except ecdsa.BadSignatureError:
         return False
-
-
-def get_token_balance(blockchain, token, address):
-    balance = 0
-    mints = []
-    for i in blockchain.blockchain["blocks"]:
-        for j in i["mints"]:
-            mints.append(j)
-
-    print(mints)
-    for i in mints:
-        if i["token_address"] == token.address:
-            balance += i["amount"]
-
-    print(balance)
 
 
 def array_minus_array(first_array, second_array):
@@ -179,19 +161,17 @@ def get_all_unspent_outputs(blockchain):
                 pre_result[out_transaction_address] = tmp_out_list
             else:
                 pre_result[out_transaction_address] = out_list
+        else:
+            pre_result[out_transaction_address] = out_list
 
     # print(pre_result)
 
-    # for address, output in pre_result.items():
-    #     if outputs[address] != []:
-    #         for out in output:
-    #             result.append(Input(address, [i.serialize() for i in outputs[address]].index(out.serialize())))
     for address, pre_result_outputs in pre_result.items():
         index = 0
         for out in pre_result_outputs:
             result.append([out, address, index])
             index += 1
-
+    # do not use these prints
     # print(f"result: {result}")
     # print(f"result2: {[i.serialize() for i in result]}")
     return result
@@ -205,7 +185,7 @@ def get_potential_inputs(blockchain, user_public_key, token_address="", target_a
     result = []
     for i in outputs_format:
         if current_amount >= target_amount:
-            print("Breaking!")
+            # print("Breaking!")
             break
         if i[0].to == generate_address(user_public_key):
             if i[0].token_address == token_address:
@@ -218,6 +198,7 @@ def get_potential_inputs(blockchain, user_public_key, token_address="", target_a
 def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token_address=""):
     from Transaction import Transaction, Output, Input
     from Block import NewBlock
+    from Token import NewToken
     inputs: List[Input] = get_potential_inputs(blockchain, user_private_key.get_verifying_key(), token_address, target_amount=amount)
     outputs: List[Output] = []
     all_blockchain_transaction_outputs = {}
@@ -236,13 +217,19 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     for _in in inputs:
         input_sum += all_blockchain_transaction_outputs[_in.transaction_address][_in.output_index].amount
 
-    if token_address == "":
-        outputs.append(Output(to, amount, token_address))
+    outputs.append(Output(to, amount, token_address, "send"))
+    if token_address != "":
+        for tk in blockchain.get_token_list():
+            tk: NewToken = tk
+            if tk.burn:
+                outputs.append(Output("", amount*tk.burn, token_address, "send"))
+            if tk.commission:
+                outputs.append(Output(generate_address(tk.public_key), amount * tk.commission, token_address, "commission"))
 
     for out in outputs:
         output_sum += out.amount
 
-    outputs.append(Output(generate_address(user_private_key.get_verifying_key()), input_sum - output_sum, token_address))
+    outputs.append(Output(generate_address(user_private_key.get_verifying_key()), input_sum - output_sum, token_address, type="return"))
 
     new_transaction = Transaction(public_key=user_private_key.get_verifying_key(), inputs=inputs, outputs=outputs)
     sign(private_key=user_private_key, target=new_transaction)
@@ -251,5 +238,77 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
 
     return new_transaction
 
-def get_token_balance():
-    pass
+
+def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=""):
+    balance = 0
+    inputs = get_potential_inputs(blockchain, public_key, token_address)
+    for _in in inputs:
+        out = input_to_output(blockchain, _in)
+        if out.type not in ["burn", "gas"]:
+            if out.token_address == token_address:
+                if out.to == generate_address(public_key):
+                    balance += out.amount
+
+    return balance
+
+
+def create_token_transaction(blockchain, private_key: ecdsa.SigningKey, token):
+    from Transaction import Transaction, Output
+
+    new_transaction = Transaction(private_key.get_verifying_key(),
+                                  get_potential_inputs(blockchain,
+                                                       private_key.get_verifying_key(),
+                                                       target_amount=config.creation_gas_fee),
+                                  [Output("", config.creation_gas_fee, "", "gas")],
+                                  tokens=[token])
+
+    sign(private_key, new_transaction)
+
+    return new_transaction
+
+
+def public_key_to_string(public_key: ecdsa.VerifyingKey):
+    der = public_key.to_der()
+    return base64.b64encode(der).decode()
+
+
+def string_to_public_key(string):
+    der = base64.b64decode(string)
+    return ecdsa.VerifyingKey.from_der(der)
+
+
+def sort_outputs_by_type(data):
+    result = {}
+
+    for obj in data:
+        obj_type = obj.type
+        if obj_type in result:
+            result[obj_type].append(obj)
+        else:
+            result[obj_type] = [obj]
+
+    return result
+
+
+def get_block_outputs(block):
+    from Block import NewBlock
+    block: NewBlock = block
+
+    result = []
+
+    for tr in block.transactions:
+        for out in tr.outputs:
+            result.append(out)
+
+    return result
+
+
+def input_to_output(blockchain, input):
+    from Block import NewBlock
+    from Transaction import Transaction
+    for block in blockchain.blockchain["blocks"]:
+        block = NewBlock.from_dict(block)
+        for tr in block.transactions:
+            tr: Transaction = tr
+            if tr.address == input.transaction_address:
+                return tr.outputs[input.output_index]

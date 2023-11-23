@@ -1,13 +1,21 @@
 Tasks:
-5) Add tokens in to utils.get_all_unspent_transactions()
 7) Fix negative number issue
-9) Save public key as der in base64
 10) Check transaction outputs, so they are not negative and follow token rules
-11) Advanced token sending and validating
-13) (Optional) BACKUP EVERYTHING BEFORE DOING THIS! Store new tokens in transactions. Warning: THIS IS HARD! Or you can just add them in to the existing transaction methods
 12) Create a function for the miners to check if a transaction is not fraudulent
 13) Try except everything!
 14) Try crashing the program do all test, also ask others to try do that
-15) Make the serialize strict funtion work normal
+15) Make the "serialize strict" funtion work normal
+18) Transaction fees... There is an idea to auto calculate them(you can borrow the io_sum code from the utils and actually make a function for that in utils)
+19) Check if a mint is allowed in a transaction(search its outputs, actually make a function in utils that will sort the outputs by their TYPE AND TOKEN in to dict(I think you already wrote this code somewhere in utils))
+20) What if the user enters an invalid output index in the input? Fix it!
+21) Check if the transaction inputs are real
+22) If the input sum-output sum is less that zero for any token is less than zero(don't forget to not count the mint and reward type tokens) consider the transaction invalid
+24) Create a token balance token function in utils
+26) Add timestamps and validate them
+27) Add NFT support
+28) Make the decimals actually do something
+29) Zip and base64 the blockchain when saved(do this last)
+30) Disallow two duplicate tokens
+31) Create a calculate reward based in halving function
 
-12) Create output types: send, reward, burn, commission, fee, mint. Maby add Input types too?
+12) Create output types: send, reward, burn, commission, fee, mint, gas. Maby add Input types too?

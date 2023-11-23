@@ -76,18 +76,18 @@ class BlockChain:
                     return False
 
             # validate tokens
-            for token in block_object.tokens:
+            for token in self.get_token_list():
                 if not utils.verify(token):
                     return False
 
-            # validate mints
-            for mint in block_object.mints:
-                if not utils.verify(mint):
-                    return False
-                array = [[token.address, token.public_key] for token in block_object.tokens]
-
-                if not any(item == [mint.token_address, mint.public_key] for item in array):
-                    return False
+            # # validate mints
+            # for mint in block_object.mints:
+            #     if not utils.verify(mint):
+            #         return False
+            #     array = [[token.address, token.public_key] for token in block_object.tokens]
+            #
+            #     if not any(item == [mint.token_address, mint.public_key] for item in array):
+            #         return False
 
             # validate difficulty
             if block_object.hash[:config.strict] != "0" * config.strict:
@@ -101,4 +101,21 @@ class BlockChain:
             if len(input_hash_list) != len(set(input_hash_list)):
                 return False
 
+            # validate emptiness
+            if block_object.is_empty():
+                print("Block is empty")
+                return False
+
         return True
+
+    def get_token_list(self) -> list[NewToken]:
+        result = []
+        for i in range(len(self.blockchain["blocks"])):
+            one: dict = self.blockchain["blocks"][i]
+            block_object = NewBlock.from_dict(one)
+
+            for transaction in block_object.transactions:
+                for token in transaction.tokens:
+                    result.append(token)
+
+        return result

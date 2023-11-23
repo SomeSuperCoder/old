@@ -2,77 +2,26 @@
     "version": 1,
     "blocks": [
         {
-            "id": 1,
+            "id": 0,
             "transactions": [
                 {
-                    "address": "sr1NQ2q94Tr4VmHiNrUgAmQeUmFAN2h6QeyD",
-                    "public_key": "-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAETjXSwDDzomgLapXMFUvw7gCES1ufu4cP\nWR00kqdJFdYpIoVgy5cr0Y+S2EpgbPydiZzDxLwPAbfBq6erNuL3nQ==\n-----END PUBLIC KEY-----\n",
+                    "address": "sr16fJztSmsAYz7wForMTN5WabQfgcqDHsSs",
+                    "public_key": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEX4GVbVgmutfTDa7StcjJjnIEbB7IMj2jNkRUdhg/t8pUulEbi3grxQhZYkEui5h5SW47YL6+58Nph9HVhIuaUA==",
                     "inputs": [],
                     "outputs": [
                         {
-                            "to": "waiter",
+                            "to": "nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV",
                             "amount": 10,
-                            "token_address": ""
+                            "token_address": "",
+                            "type": "reward"
                         }
                     ],
-                    "signature": "7urji+c8cNnrLKE3KZIhBlnjG6H5Y3S+Z+RjEIY53mr/WevvBqzxjpia0xO6Ct7FtnDo4ykK55LJlG3pP3TSVQ=="
+                    "tokens": [],
+                    "signature": "EVXszpcvyz4cJQ+bpzDtTl7ZueFkp4i3DSw3c8alEwLhZS13Q1Djm7k8hOaITkB4vg2+rFUzuRSAvcNEi/suzw=="
                 }
             ],
-            "tokens": [],
-            "mints": [],
             "previous_block_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-            "hash": "09ea2b3e9eded039d3fdc071dd68ecf90569b7f6c1a0c3e3a0ff7cda31bb8713",
-            "nonce": 0
-        },
-        {
-            "id": 2,
-            "transactions": [
-                {
-                    "address": "sr17Wfwj2K37Rc63QYpYxHDtHn4GY9RptLSe",
-                    "public_key": "-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAETjXSwDDzomgLapXMFUvw7gCES1ufu4cP\nWR00kqdJFdYpIoVgy5cr0Y+S2EpgbPydiZzDxLwPAbfBq6erNuL3nQ==\n-----END PUBLIC KEY-----\n",
-                    "inputs": [
-                        {
-                            "transaction_address": "sr1NQ2q94Tr4VmHiNrUgAmQeUmFAN2h6QeyD",
-                            "output_index": 0
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "to": "waiter",
-                            "amount": 10,
-                            "token_address": ""
-                        }
-                    ],
-                    "signature": "GpbwmbI2K3sUE71AEmehVA8cHuw19UqEkequU5AfGyEuJ7tPelNeRdnW63z6Lis1FXK1bAZdyEuxaPlgG1fuDw=="
-                }
-            ],
-            "tokens": [],
-            "mints": [],
-            "previous_block_hash": "09ea2b3e9eded039d3fdc071dd68ecf90569b7f6c1a0c3e3a0ff7cda31bb8713",
-            "hash": "1a5681a2bb23f9e8ba74c641654c979f0b06af2cd72f8e2d509f87c31eabecee",
-            "nonce": 0
-        },
-        {
-            "id": 3,
-            "transactions": [
-                {
-                    "address": "sr1JBPfeUBQy2ytjasFqrDwnLiq22nCkqBP2",
-                    "public_key": "-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAETjXSwDDzomgLapXMFUvw7gCES1ufu4cP\nWR00kqdJFdYpIoVgy5cr0Y+S2EpgbPydiZzDxLwPAbfBq6erNuL3nQ==\n-----END PUBLIC KEY-----\n",
-                    "inputs": [],
-                    "outputs": [
-                        {
-                            "to": "nc15FXbS1nct4G8iku1dQkcbLzTPZEgp8BGg",
-                            "amount": 10,
-                            "token_address": ""
-                        }
-                    ],
-                    "signature": "j+KsuDCXGpChIK2vjBq8qfuAb2+d0pvdu//MLPbxyfgF86Cgf53yPl4Og6W9MNAqslwgwkowYV/y+ROhZXgaAA=="
-                }
-            ],
-            "tokens": [],
-            "mints": [],
-            "previous_block_hash": "1a5681a2bb23f9e8ba74c641654c979f0b06af2cd72f8e2d509f87c31eabecee",
-            "hash": "fe353d72d412de22299b28405179c816fa1049c28d8d348649175384dd98655a",
+            "hash": "f3b2c5087cea67cd6c4d9bee2ee9c471cb950d28a766a0f28f8e4d37e63ddf50",
             "nonce": 0
         }
     ]

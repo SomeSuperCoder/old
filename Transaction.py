@@ -1,3 +1,4 @@
+from Token import NewToken
 from typing import List
 
 import ecdsa
@@ -6,11 +7,17 @@ import json
 
 
 class Transaction:
-    def __init__(self, public_key: str | ecdsa.VerifyingKey, inputs, outputs, signature=None):
+    def __init__(self, public_key: str | ecdsa.VerifyingKey, inputs, outputs, tokens=None, signature=None):
+        if tokens is None:
+            self.tokens = []
+        else:
+            self.tokens = tokens
+
         if type(public_key) is str:
-            self.public_key = ecdsa.VerifyingKey.from_pem(public_key)
+            self.public_key = utils.string_to_public_key(public_key)
         else:
             self.public_key = public_key
+
         self.signature = signature
         self.inputs: List[Input] = inputs
         self.outputs: List[Output] = outputs
@@ -21,16 +28,18 @@ class Transaction:
         if not strict:
             return json.dumps({
                 "address": self.address,
-                "public_key": self.public_key.to_pem().decode(),
+                "public_key": utils.public_key_to_string(self.public_key),
                 "inputs": [json.loads(i.serialize()) for i in self.inputs],
-                "outputs": [json.loads(i.serialize()) for i in self.outputs]
+                "outputs": [json.loads(i.serialize()) for i in self.outputs],
+                "tokens": [json.loads(i.serialize(True)) for i in self.tokens]
             })
         elif strict:
             return json.dumps({
                 "address": self.address,
-                "public_key": self.public_key.to_pem().decode(),
+                "public_key": utils.public_key_to_string(self.public_key),
                 "inputs": [json.loads(i.serialize()) for i in self.inputs],
                 "outputs": [json.loads(i.serialize()) for i in self.outputs],
+                "tokens": [json.loads(i.serialize(True)) for i in self.tokens],
                 "signature": self.signature
             })
 
@@ -39,7 +48,11 @@ class Transaction:
         return Transaction(public_key=source["public_key"],
                            inputs=[Input.from_dict(i) for i in source["inputs"]],
                            outputs=[Output.from_dict(i) for i in source["outputs"]],
+                           tokens=[NewToken.from_dict(i) for i in source["tokens"]],
                            signature=source["signature"])
+
+    def is_empty(self):
+        return not bool(len(self.inputs) + len(self.outputs) + len(self.tokens))
 
 
 class Input:
