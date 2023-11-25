@@ -6,7 +6,8 @@ import hashlib
 
 
 class NewToken:
-    def __init__(self, name: str, symbol: str, public_key: str | ecdsa.VerifyingKey, burn=0, commission=0, mintable=False, decimals=2, max_supply=math.inf, attach_file_url="", signature=None):
+    def __init__(self, name: str, symbol: str, public_key: str | ecdsa.VerifyingKey, nonce=0, burn=0, commission=0, mintable=False, decimals=2, max_supply=math.inf, attach_file_url="", signature=None):
+        self.nonce = nonce
         self.name = name
         self.symbol = symbol
         self.burn = burn
@@ -35,7 +36,8 @@ class NewToken:
                 "attach_file_url": self.attach_file_url,
                 "decimals": self.decimals,
                 "max_supply": self.max_supply,
-                "public_key": utils.public_key_to_string(self.public_key)
+                "public_key": utils.public_key_to_string(self.public_key),
+                "nonce": self.nonce
             })
         else:
             return json.dumps({
@@ -49,6 +51,7 @@ class NewToken:
                 "max_supply": self.max_supply,
                 "public_key": utils.public_key_to_string(self.public_key),
                 "address": self.address,
+                "nonce": self.nonce,
                 "signature": self.signature
             })
 
@@ -56,6 +59,7 @@ class NewToken:
     def from_dict(source):
         return NewToken(name=source["name"],
                         symbol=source["symbol"],
+                        nonce=source["nonce"],
                         burn=source["burn"],
                         commission=source["commission"],
                         mintable=source["mintable"],

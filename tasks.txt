@@ -13,11 +13,14 @@ Tasks:
 28) Make the decimals actually do something
 29) Zip and base64 the blockchain when saved(do this last)
 30) Disallow two duplicate tokens
-31) Create a "calculate reward" based on halving function
-32) Disallow sending money to your self
 33) Block ids must follow each other!
-34) Check before sending!
 35) Check and do all token stuff
 36) Search for unspent outputs staring from the end
+37) is_empty is not working!
+38) Disallow to duplicate transaction addresses and tokens!
+40) Check balance before sending a token
+41) Check if token exists
+43) Check that gas is token amount * gas price
+44) Check if the token we are sending exists
 
 12) Create output types: send, reward, burn, commission, fee, mint, gas. Maby add Input types too?

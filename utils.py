@@ -23,7 +23,7 @@ def generate_address(public_key):
     hash_ripemd160 = ripemd160.digest()
 
     # Step 3: Add version byte to the RIPEMD-160 hash
-    version_hash = b'\x00' + hash_ripemd160
+    version_hash = config.chain_id + hash_ripemd160
 
     # Step 4: Compute the double SHA-256 hash of the version + RIPEMD-160 hash
     hash_sha256_2 = hashlib.sha256(hashlib.sha256(version_hash).digest()).digest()
@@ -50,7 +50,7 @@ def generate_serializable_address(token):
     hash_ripemd160 = ripemd160.digest()
 
     # Step 3: Add version byte to the RIPEMD-160 hash
-    version_hash = b'\x00' + hash_ripemd160
+    version_hash = config.chain_id + hash_ripemd160
 
     # Step 4: Compute the double SHA-256 hash of the version + RIPEMD-160 hash
     hash_sha256_2 = hashlib.sha256(hashlib.sha256(version_hash).digest()).digest()
@@ -94,7 +94,7 @@ def random_mine(target):
 
 
 def get_hash(target):
-    return hashlib.sha256(target.serialize(False).encode()).hexdigest()
+    return hashlib.sha256(config.chain_id + target.serialize(False).encode()).hexdigest()
 
 
 def sign(private_key, target):
@@ -131,6 +131,7 @@ def array_minus_array(first_array, second_array):
 
 def get_all_unspent_outputs(blockchain):
     from Block import NewBlock
+    print("capybara")
 
     outputs = {}
     inputs = []
@@ -142,7 +143,9 @@ def get_all_unspent_outputs(blockchain):
         block_object = NewBlock.from_dict(one)
 
         for tr in block_object.transactions:
+            print(f"Transaction {tr.address}")
             outputs[tr.address] = []
+            print(outputs)
             for output in tr.outputs:
                 outputs[tr.address].append(output)
 
@@ -171,43 +174,40 @@ def get_all_unspent_outputs(blockchain):
         for out in pre_result_outputs:
             result.append([out, address, index])
             index += 1
-    # do not use these prints
     print(f"result: {result}")
     print(f"result2: {[i[0].serialize() for i in result]}")
     return result
 
 
 def get_potential_inputs(blockchain, user_public_key, token_address="", target_amount=math.inf):
-    print("Begin get_potential_inputs")
+    # print("Begin get_potential_inputs")
     from Transaction import Input
     outputs_format = get_all_unspent_outputs(blockchain)
-    print(outputs_format)
-    print("="*10)
-    for i in outputs_format:
-        print(i[0].serialize())
-    print("="*10)
-
+    # print(outputs_format)
+    # print("="*10)
+    # for i in outputs_format:
+    #     print(i[0].serialize())
+    # print("="*10)
 
     current_amount = 0
+    reward_counter = 0
+    current_reward = config.base_mining_reward
     result = []
     for i in outputs_format:
-        print("For!")
-        print(current_amount)
-        print(target_amount)
-        print(current_amount >= target_amount)
         if current_amount >= target_amount:
-            print("Breaking!")
             break
-        print(f"To: {i[0].to}")
-        print(f"Address: {generate_address(user_public_key)}")
         if i[0].to == generate_address(user_public_key):
-            print("If1")
-            print(i[0].token_address)
-            print(token_address)
             if i[0].token_address == token_address:
+                print(i[0].type)
+                if not i[0].type in ["burn", "gas", "reward"]:
+                    current_amount += i[0].amount
+                if i[0].type == "reward":
+                    if reward_counter >= config.halving_period:
+                        reward_counter = 0
+                        current_reward = max(current_reward/2, 1)
+                    reward_counter += 1
+                    current_amount += max(current_reward, 1)
                 result.append(Input(i[1], i[2]))
-                print("Append!")
-                current_amount += i[0].amount
 
     return result
 
@@ -216,23 +216,41 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     from Transaction import Transaction, Output, Input
     from Block import NewBlock
     from Token import NewToken
-    inputs: List[Input] = get_potential_inputs(blockchain, user_private_key.get_verifying_key(), token_address, target_amount=amount)
-    outputs: List[Output] = []
-    all_blockchain_transaction_outputs = {}
 
-    for i in range(len(blockchain.blockchain["blocks"])):
-        one: dict = blockchain.blockchain["blocks"][i]
-        block_object = NewBlock.from_dict(one)
-        for tr in block_object.transactions:
-            all_blockchain_transaction_outputs[tr.address] = []
-            for out in tr.outputs:
-                all_blockchain_transaction_outputs[tr.address].append(out)
+    current_reward = config.base_mining_reward
+
+    if amount > get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address):
+        print("Not enough money! ;(")
+        return None
+
+    inputs: List[Input] = get_potential_inputs(blockchain, user_private_key.get_verifying_key(), token_address, target_amount=amount)
+    print("get_potential_inputs")
+    print([i.serialize() for i in inputs])
+    outputs: List[Output] = []
+    # all_blockchain_transaction_outputs = {}
+
+    # for i in range(len(blockchain.blockchain["blocks"])):
+    #     one: dict = blockchain.blockchain["blocks"][i]
+    #     block_object = NewBlock.from_dict(one)
+    #     for tr in block_object.transactions:
+    #         all_blockchain_transaction_outputs[tr.address] = []
+    #         for out in tr.outputs:
+    #             all_blockchain_transaction_outputs[tr.address].append(out)
 
     input_sum = 0
     output_sum = 0
 
     for _in in inputs:
-        input_sum += all_blockchain_transaction_outputs[_in.transaction_address][_in.output_index].amount
+        some_out: Output = input_to_output(blockchain, _in)
+
+        if not some_out.type in ["burn", "gas", "reward"]:
+            input_sum += some_out.amount
+        if some_out.type == "reward":
+            block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
+
+            if block_id-1 >= config.halving_period:
+                current_reward = max(current_reward / 2, 1)
+            input_sum += max(current_reward, 1)
 
     outputs.append(Output(to, amount, token_address, "send"))
     if token_address != "":
@@ -249,23 +267,42 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     outputs.append(Output(generate_address(user_private_key.get_verifying_key()), input_sum - output_sum, token_address, type="return"))
 
     new_transaction = Transaction(public_key=user_private_key.get_verifying_key(), inputs=inputs, outputs=outputs)
+    get_nonce_for_unique_address(blockchain, new_transaction)
     sign(private_key=user_private_key, target=new_transaction)
-    print(f"Input sum: {input_sum}")
-    print(f"Output sum: {output_sum}")
+    # print(f"Input sum: {input_sum}")
+    # print(f"Output sum: {output_sum}")
 
     return new_transaction
 
 
 def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=""):
     balance = 0
+    reward_counter = 0
+    current_reward = config.base_mining_reward
     inputs = get_potential_inputs(blockchain, public_key, token_address)
-    print(inputs)
+    print("Get potential inputs in the get token balance")
+    print([i.serialize() for i in inputs])
+
     for _in in inputs:
         out = input_to_output(blockchain, _in)
-        if out.type not in ["burn", "gas"]:
+        print("input_to_output result")
+        print(out.serialize())
+        if not out.type in ["burn", "gas", "reward"]:
             if out.token_address == token_address:
                 if out.to == generate_address(public_key):
+                    print(f"Before: {balance}")
+                    print(f"Adding: {out.amount}")
                     balance += out.amount
+                    print(f"After: {balance}")
+
+        if out.type == "reward":
+            if token_address == "":
+                if out.to == generate_address(public_key):
+                    if reward_counter >= config.halving_period:
+                        reward_counter = 0
+                        current_reward = max(current_reward/2, 1)
+                    reward_counter += 1
+                    balance += max(current_reward, 1)
 
     return balance
 
@@ -273,11 +310,19 @@ def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=
 def create_token_transaction(blockchain, private_key: ecdsa.SigningKey, token):
     from Transaction import Transaction, Output
 
+    inputs = get_potential_inputs(blockchain, private_key.get_verifying_key(), target_amount=config.creation_gas_fee)
+    inputs_converted = [input_to_output(blockchain, i) for i in inputs]
+    input_sum = 0
+
+    for i in inputs_converted:
+        input_sum += i.amount
+
     new_transaction = Transaction(private_key.get_verifying_key(),
-                                  get_potential_inputs(blockchain,
-                                                       private_key.get_verifying_key(),
-                                                       target_amount=config.creation_gas_fee),
-                                  [Output("", config.creation_gas_fee, "", "gas")],
+                                  inputs,
+                                  [
+                                      Output("", config.creation_gas_fee, "", "gas"),
+                                      Output(generate_address(private_key.get_verifying_key()), input_sum-config.creation_gas_fee, "", "return")
+                                  ],
                                   tokens=[token])
 
     sign(private_key, new_transaction)
@@ -343,3 +388,39 @@ def input_to_output(blockchain, input):
             tr: Transaction = tr
             if tr.address == input.transaction_address:
                 return tr.outputs[input.output_index]
+
+
+def get_nonce_for_unique_address(blockchain, target):
+    from Block import NewBlock
+
+    print(blockchain.blockchain)
+    existing_addresses = []
+
+    for i in range(len(blockchain.blockchain["blocks"])):
+        one: dict = blockchain.blockchain["blocks"][i]
+        block_object = NewBlock.from_dict(one)
+        for tr in block_object.transactions:
+            existing_addresses.append(tr.address)
+            for token in tr.tokens:
+                existing_addresses.append(token.address)
+
+    print(existing_addresses)
+
+    target.address = generate_serializable_address(target)
+
+    while target.address in existing_addresses:
+        print("In loop")
+        target.nonce = random.randint(0, math.pow(10, 308))
+        target.address = generate_serializable_address(target)
+
+
+def get_block_id_by_transaction_address(blockchain, transaction_address):
+    from Block import NewBlock
+
+    for i in range(len(blockchain.blockchain["blocks"])):
+        one: dict = blockchain.blockchain["blocks"][i]
+        block_object = NewBlock.from_dict(one)
+
+        for tr in block_object.transactions:
+            if tr.address == transaction_address:
+                return block_object.id

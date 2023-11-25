@@ -7,7 +7,8 @@ import json
 
 
 class Transaction:
-    def __init__(self, public_key: str | ecdsa.VerifyingKey, inputs, outputs, tokens=None, signature=None):
+    def __init__(self, public_key: str | ecdsa.VerifyingKey, inputs, outputs, tokens=None, nonce=0, signature=None):
+        self.nonce = nonce
         if tokens is None:
             self.tokens = []
         else:
@@ -21,17 +22,17 @@ class Transaction:
         self.signature = signature
         self.inputs: List[Input] = inputs
         self.outputs: List[Output] = outputs
-        self.address = ""
         self.address = utils.generate_serializable_address(self)
 
     def serialize(self, strict=False):
         if not strict:
             return json.dumps({
-                "address": self.address,
+                # "address": self.address,
                 "public_key": utils.public_key_to_string(self.public_key),
                 "inputs": [json.loads(i.serialize()) for i in self.inputs],
                 "outputs": [json.loads(i.serialize()) for i in self.outputs],
-                "tokens": [json.loads(i.serialize(True)) for i in self.tokens]
+                "tokens": [json.loads(i.serialize(True)) for i in self.tokens],
+                "nonce": self.nonce
             })
         elif strict:
             return json.dumps({
@@ -40,6 +41,7 @@ class Transaction:
                 "inputs": [json.loads(i.serialize()) for i in self.inputs],
                 "outputs": [json.loads(i.serialize()) for i in self.outputs],
                 "tokens": [json.loads(i.serialize(True)) for i in self.tokens],
+                "nonce": self.nonce,
                 "signature": self.signature
             })
 
@@ -49,6 +51,8 @@ class Transaction:
                            inputs=[Input.from_dict(i) for i in source["inputs"]],
                            outputs=[Output.from_dict(i) for i in source["outputs"]],
                            tokens=[NewToken.from_dict(i) for i in source["tokens"]],
+                           # address=source["address"],
+                           nonce=source["nonce"],
                            signature=source["signature"])
 
     def is_empty(self):

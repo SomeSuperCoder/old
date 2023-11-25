@@ -10,6 +10,7 @@ class Validator:
         formatted = utils.sort_outputs_by_type(output_list)
         block_reward_list = formatted.get("reward")
 
+        # disallow more than one reward per block
         if block_reward_list is None:
             return True
 
