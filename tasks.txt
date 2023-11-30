@@ -2,16 +2,12 @@ Tasks:
 13) Try except everything!
 15) Make the "serialize strict" funtion work normal
 20) What if the user enters an invalid output index in the input? Fix it!(just return false on try except)
-21) Check if the transaction inputs are real
-22) If the input sum-output sum is less that zero for ANY TOKEN is less than zero(don't forget to not count the mint and reward type tokens) consider the transaction invalid
 26) Add timestamps and validate them
 27) Add NFT support
 28) Make the decimals actually do something
 29) Zip and base64 the blockchain when saved(do this last)
 35) Check and do all token stuff
 37) is_empty is not working!
-38) Disallow to duplicate transaction addresses and tokens! NOT DONE!
-43) Check that gas == token amount * gas price
 47) Allow using a block as an input(use input types for that, also create a get_fee_amount function for a block and for transactions!, and also ditch the fee output type for that)
 48) Add an option to add a miner fee in the send_token function
 49) I think there is a problem with output token addresses. I don't know ;(
@@ -19,5 +15,6 @@ Tasks:
 51) Check digital signatures of TOKEN AND TRANSACTIONS(Do tokens even need them?)
 52) Test the transaction_is_fraudulent function!!!!!!!!!!!!!!!!
 53) Create an easy mint function
+54) Check gas fees for smart contract creation and token creation
 
 12) Create output types: send, reward, burn, commission, fee, mint, gas, stop_mint, maby these too -> (stake, mine_burn). Maby add Input types too?

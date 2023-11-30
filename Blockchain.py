@@ -125,3 +125,14 @@ class BlockChain:
                     result.append(token)
 
         return result
+
+    def get_transaction_list(self) -> list[NewToken]:
+        result = []
+        for i in range(len(self.blockchain["blocks"])):
+            one: dict = self.blockchain["blocks"][i]
+            block_object = NewBlock.from_dict(one)
+
+            for transaction in block_object.transactions:
+                result.append(transaction)
+
+        return result

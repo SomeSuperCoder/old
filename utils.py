@@ -415,6 +415,8 @@ def input_to_output(blockchain, input):
         block = NewBlock.from_dict(block)
         for tr in block.transactions:
             tr: Transaction = tr
+            print("The input is:")
+            print(input)
             if tr.address == input.transaction_address:
                 return tr.outputs[input.output_index]
 
@@ -484,3 +486,38 @@ def get_token_minted_amount(blockchain, token_address):
                     minted_amount += out.amount
 
     return minted_amount
+
+
+def get_output_sum_from_input_list(blockchain, inputs: list):
+    current_reward = config.base_mining_reward
+    output_sum = 0
+
+    for _in in inputs:
+        some_out = input_to_output(blockchain, _in)
+        if some_out.type not in ["burn", "gas", "reward"]:
+            output_sum += some_out.amount
+
+        if some_out.token_address == "":
+            if some_out.type == "reward":
+                print(f"Again the input is: {_in}")
+                block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
+
+                if block_id - 1 >= config.halving_period:
+                    current_reward = max(current_reward / 2, 1)
+                output_sum += max(current_reward, 1)
+
+    return output_sum
+
+
+def sort_inputs_by_output_token_address(blockchain, inputs):
+    result = {}
+    for _in in inputs:
+        print("In")
+        print(_in)
+        out = input_to_output(blockchain, _in)
+        if result.get(out.token_address) is None:
+            result[out.token_address] = []
+
+        result[out.token_address].append(_in)
+
+    return result
