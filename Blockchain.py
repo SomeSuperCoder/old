@@ -54,6 +54,8 @@ class BlockChain:
     def validate(self):
         input_hash_list = []
 
+        prev_block_id = 0
+
         for i in range(len(self.blockchain["blocks"])):
             one: dict = self.blockchain["blocks"][i]
             block_object = NewBlock.from_dict(one)
@@ -103,6 +105,12 @@ class BlockChain:
             if not Validator.check_only_one_block_reward(block_object):
                 print("Block has more than one reward!")
                 return False
+
+            # validate block id
+            if block_object.id != prev_block_id+1:
+                return False
+
+            prev_block_id += 1
 
         return True
 

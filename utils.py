@@ -138,13 +138,14 @@ def get_all_unspent_outputs(blockchain):
     pre_result = {}
     result = []
 
-    for i in range(len(blockchain.blockchain["blocks"])):
+    for i in reversed(range(len(blockchain.blockchain["blocks"]))):
         one: dict = blockchain.blockchain["blocks"][i]
         block_object = NewBlock.from_dict(one)
 
         for tr in block_object.transactions:
             print(f"Transaction {tr.address}")
-            outputs[tr.address] = []
+            if outputs.get(tr.address) is None:
+                outputs[tr.address] = []
             print(outputs)
             for output in tr.outputs:
                 outputs[tr.address].append(output)
@@ -160,7 +161,8 @@ def get_all_unspent_outputs(blockchain):
         for _in in inputs:
             if out_transaction_address == _in.transaction_address:
                 tmp_out_list = out_list
-                tmp_out_list.pop(_in.output_index)
+                # tmp_out_list.pop(_in.output_index)
+                tmp_out_list[_in.output_index] = None
                 pre_result[out_transaction_address] = tmp_out_list
             else:
                 pre_result[out_transaction_address] = out_list
@@ -170,45 +172,57 @@ def get_all_unspent_outputs(blockchain):
     print(pre_result)
 
     for address, pre_result_outputs in pre_result.items():
-        index = 0
-        for out in pre_result_outputs:
-            result.append([out, address, index])
-            index += 1
+        for i in range(len(pre_result_outputs)):
+            print(f"Unspent appending: {[pre_result_outputs[i], address, i]}")
+            result.append([pre_result_outputs[i], address, i])
+
     print(f"result: {result}")
-    print(f"result2: {[i[0].serialize() for i in result]}")
+    # print(f"result2: {[i[0].serialize() for i in result]}")
     return result
 
 
 def get_potential_inputs(blockchain, user_public_key, token_address="", target_amount=math.inf):
-    # print("Begin get_potential_inputs")
+    print("Begin get_potential_inputs")
     from Transaction import Input
     outputs_format = get_all_unspent_outputs(blockchain)
+    # outputs_format.reverse()
+    # print(f"reversed: {outputs_format}")
     # print(outputs_format)
     # print("="*10)
     # for i in outputs_format:
-    #     print(i[0].serialize())
+        # print(i[0].serialize())
     # print("="*10)
 
     current_amount = 0
     reward_counter = 0
     current_reward = config.base_mining_reward
     result = []
+
     for i in outputs_format:
         if current_amount >= target_amount:
             break
+
+        if i[0] is None:
+            continue
+
         if i[0].to == generate_address(user_public_key):
             if i[0].token_address == token_address:
                 print(i[0].type)
                 if not i[0].type in ["burn", "gas", "reward"]:
                     current_amount += i[0].amount
-                if i[0].type == "reward":
-                    if reward_counter >= config.halving_period:
-                        reward_counter = 0
-                        current_reward = max(current_reward/2, 1)
-                    reward_counter += 1
-                    current_amount += max(current_reward, 1)
-                result.append(Input(i[1], i[2]))
+                    print(f"Adding {i[0].amount}")
 
+                if i[0].type == "":
+                    if i[0].type == "reward":
+                        if reward_counter >= config.halving_period:
+                            reward_counter = 0
+                            current_reward = max(current_reward/2, 1)
+                        reward_counter += 1
+                        current_amount += max(current_reward, 1)
+
+                print(f"Index is {i[2]}")
+                result.append(Input(i[1], i[2]))
+    print("Result:")
     return result
 
 
@@ -218,9 +232,9 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     from Token import NewToken
 
     current_reward = config.base_mining_reward
-
+    print(f"Token balance: {get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address)}")
     if amount > get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address):
-        print("Not enough money! ;(")
+        print("Not enough money! ;(erfererregregregrgergerg")
         return None
 
     inputs: List[Input] = get_potential_inputs(blockchain, user_private_key.get_verifying_key(), token_address, target_amount=amount)
@@ -245,12 +259,14 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
 
         if not some_out.type in ["burn", "gas", "reward"]:
             input_sum += some_out.amount
-        if some_out.type == "reward":
-            block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
 
-            if block_id-1 >= config.halving_period:
-                current_reward = max(current_reward / 2, 1)
-            input_sum += max(current_reward, 1)
+        if some_out.token_address == "":
+            if some_out.type == "reward":
+                block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
+
+                if block_id-1 >= config.halving_period:
+                    current_reward = max(current_reward / 2, 1)
+                input_sum += max(current_reward, 1)
 
     outputs.append(Output(to, amount, token_address, "send"))
     if token_address != "":
@@ -311,12 +327,24 @@ def create_token_transaction(blockchain, private_key: ecdsa.SigningKey, token):
     from Transaction import Transaction, Output
 
     inputs = get_potential_inputs(blockchain, private_key.get_verifying_key(), target_amount=config.creation_gas_fee)
-    inputs_converted = [input_to_output(blockchain, i) for i in inputs]
+    # inputs_converted = [input_to_output(blockchain, i) for i in inputs]
     input_sum = 0
+    current_reward = config.base_mining_reward
 
-    for i in inputs_converted:
-        input_sum += i.amount
+    for _in in inputs:
+        some_out = input_to_output(blockchain, _in)
+        if not some_out.type in ["burn", "gas", "reward"]:
+            input_sum += some_out.amount
 
+        if some_out.token_address == "":
+            if some_out.type == "reward":
+                block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
+
+                if block_id - 1 >= config.halving_period:
+                    current_reward = max(current_reward / 2, 1)
+                input_sum += max(current_reward, 1)
+
+    print(f"THE INPUT SUM IS: {input_sum}")
     new_transaction = Transaction(private_key.get_verifying_key(),
                                   inputs,
                                   [
@@ -382,6 +410,7 @@ def get_block_outputs(block):
 def input_to_output(blockchain, input):
     from Block import NewBlock
     from Transaction import Transaction
+
     for block in blockchain.blockchain["blocks"]:
         block = NewBlock.from_dict(block)
         for tr in block.transactions:
@@ -424,3 +453,34 @@ def get_block_id_by_transaction_address(blockchain, transaction_address):
         for tr in block_object.transactions:
             if tr.address == transaction_address:
                 return block_object.id
+
+
+def mints_are_stopped(blockchain, token_address):
+    from Block import NewBlock
+
+    for i in range(len(blockchain.blockchain["blocks"])):
+        one: dict = blockchain.blockchain["blocks"][i]
+        block_object = NewBlock.from_dict(one)
+
+        for tr in block_object.transactions:
+            for out in tr.outputs:
+                if out.type == "stop_mint":
+                    return True
+    return False
+
+
+def get_token_minted_amount(blockchain, token_address):
+    from Block import NewBlock
+
+    minted_amount = 0
+
+    for i in range(len(blockchain.blockchain["blocks"])):
+        one: dict = blockchain.blockchain["blocks"][i]
+        block_object = NewBlock.from_dict(one)
+
+        for tr in block_object.transactions:
+            for out in tr.outputs:
+                if out.type == "mint" and out.token_address == token_address:
+                    minted_amount += out.amount
+
+    return minted_amount

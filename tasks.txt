@@ -1,26 +1,23 @@
 Tasks:
-7) Fix negative number issue
-10) Check transaction outputs, so they are not negative and follow token rules
 13) Try except everything!
 15) Make the "serialize strict" funtion work normal
-18) Transaction fees... There is an idea to auto calculate them(you can borrow the io_sum code from the utils and actually make a function for that in utils)
-19) Check if a mint is allowed in a transaction(search its outputs, actually make a function in utils that will sort the outputs by their TYPE AND TOKEN in to dict(I think you already wrote this code somewhere in utils))
-20) What if the user enters an invalid output index in the input? Fix it!
+20) What if the user enters an invalid output index in the input? Fix it!(just return false on try except)
 21) Check if the transaction inputs are real
-22) If the input sum-output sum is less that zero for any token is less than zero(don't forget to not count the mint and reward type tokens) consider the transaction invalid
+22) If the input sum-output sum is less that zero for ANY TOKEN is less than zero(don't forget to not count the mint and reward type tokens) consider the transaction invalid
 26) Add timestamps and validate them
 27) Add NFT support
 28) Make the decimals actually do something
 29) Zip and base64 the blockchain when saved(do this last)
-30) Disallow two duplicate tokens
-33) Block ids must follow each other!
 35) Check and do all token stuff
-36) Search for unspent outputs staring from the end
 37) is_empty is not working!
-38) Disallow to duplicate transaction addresses and tokens!
-40) Check balance before sending a token
-41) Check if token exists
-43) Check that gas is token amount * gas price
-44) Check if the token we are sending exists
+38) Disallow to duplicate transaction addresses and tokens! NOT DONE!
+43) Check that gas == token amount * gas price
+47) Allow using a block as an input(use input types for that, also create a get_fee_amount function for a block and for transactions!, and also ditch the fee output type for that)
+48) Add an option to add a miner fee in the send_token function
+49) I think there is a problem with output token addresses. I don't know ;(
+50) Check if user has enough of each token for all the burns gases and commission (create an approve/allowance method)
+51) Check digital signatures of TOKEN AND TRANSACTIONS(Do tokens even need them?)
+52) Test the transaction_is_fraudulent function!!!!!!!!!!!!!!!!
+53) Create an easy mint function
 
-12) Create output types: send, reward, burn, commission, fee, mint, gas. Maby add Input types too?
+12) Create output types: send, reward, burn, commission, fee, mint, gas, stop_mint, maby these too -> (stake, mine_burn). Maby add Input types too?

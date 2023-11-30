@@ -81,14 +81,14 @@ class Input:
 class Output:
     def __init__(self, to, amount, token_address, type):
         self.to = to
-        self.amount = amount
+        self.amount = abs(amount)
         self.token_address = token_address
         self.type = type
 
     def serialize(self):
         return json.dumps({
             "to": self.to,
-            "amount": self.amount,
+            "amount": abs(self.amount),
             "token_address": self.token_address,
             "type": self.type
         })
@@ -97,7 +97,7 @@ class Output:
     def from_dict(source):
         return Output(
             to=source["to"],
-            amount=source["amount"],
+            amount=abs(source["amount"]),
             token_address=source["token_address"],
             type=source["type"]
         )
