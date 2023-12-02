@@ -189,8 +189,15 @@ class Validator:
             if some_out.type == "gas":
                 sorted_by_type_for_gas_check_in_neon_output_sum += some_out.amount
 
+        total_fee_required = 0
+        total_fee_required += len(transaction.tokens) * config.creation_gas_fee
+
+        for i in utils.sort_outputs_by_type(transaction.outputs)[""]:
+            if i.type in ["mint", "stop_mint"]:
+                total_fee_required += config.creation_gas_fee
+
         print(f"THE SUM YOU ARE LOOKING FOR: {sorted_by_type_for_gas_check_in_neon_output_sum}")
-        if sorted_by_type_for_gas_check_in_neon_output_sum < len(transaction.tokens) * config.creation_gas_fee:
+        if sorted_by_type_for_gas_check_in_neon_output_sum < total_fee_required:
             print("check gas for tokens")
             return True
 
@@ -201,5 +208,11 @@ class Validator:
         if not utils.verify(transaction):
             print("check the digital signature for transaction")
             return True
+
+        # check only after
+        if transaction.only_after is not None:
+            if transaction.only_after not in [i.address for i in blockchain.get_transaction_list()]:
+                print("check only after")
+                return True
 
         return False

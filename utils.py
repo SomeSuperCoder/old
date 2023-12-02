@@ -223,6 +223,7 @@ def get_potential_inputs(blockchain, user_public_key, token_address="", target_a
                             current_reward = max(current_reward/2, 1)
                         reward_counter += 1
                         current_amount += max(current_reward, 1)
+                        current_amount += get_fee_amount_by_output(blockchain, i[0])
 
                 print(f"Index is {i[2]}")
                 result.append(Input(i[1], i[2]))
@@ -230,7 +231,7 @@ def get_potential_inputs(blockchain, user_public_key, token_address="", target_a
     return result
 
 
-def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token_address=""):
+def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token_address="", only_after=None, miner_fee=0):
     from Transaction import Transaction, Output, Input
     from Block import NewBlock
     from Token import NewToken
@@ -262,6 +263,7 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
 
                 print(f"Adding to input_sum in send: {max(current_reward, 1)}")
                 input_sum += max(current_reward, 1)
+                input_sum += get_fee_amount_by_output(blockchain, some_out)
                 if block_id-1 >= config.halving_period:
                     print("Halving!")
                     current_reward = max(current_reward / 2, 1)
@@ -281,10 +283,10 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     print(f"Input sum in send: {input_sum}")
     print(f"Output sum in send: {output_sum}")
 
-    outputs.append(Output(generate_address(user_private_key.get_verifying_key()), input_sum - output_sum, token_address, type="return"))
+    outputs.append(Output(generate_address(user_private_key.get_verifying_key()), input_sum+miner_fee - output_sum, token_address, type="return"))
 
-    new_transaction = Transaction(public_key=user_private_key.get_verifying_key(), inputs=inputs, outputs=outputs)
-    get_nonce_for_unique_address(blockchain, new_transaction)
+    new_transaction = Transaction(public_key=user_private_key.get_verifying_key(), inputs=inputs, outputs=outputs, only_after=only_after)
+    get_nonce_for_unique_address_and_set_output_addresses(blockchain, new_transaction)
     sign(private_key=user_private_key, target=new_transaction)
     # print(f"Input sum: {input_sum}")
     # print(f"Output sum: {output_sum}")
@@ -400,11 +402,12 @@ def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=
                         current_reward = max(current_reward/2, 1)
                     reward_counter += 1
                     balance += max(current_reward, 1)
+                    balance += get_fee_amount_by_output(blockchain, out)
 
     return balance
 
 
-def create_special_transaction(blockchain, private_key: ecdsa.SigningKey, type: str, token=None, amount=0, token_address=""):
+def create_special_transaction(blockchain, private_key: ecdsa.SigningKey, type: str, token=None, amount=0, token_address="", only_after=None, miner_fee=0):
     if type not in ["token", "mint", "stop_mint", "burn"]:
         return None
 
@@ -434,10 +437,11 @@ def create_special_transaction(blockchain, private_key: ecdsa.SigningKey, type: 
                 if block_id - 1 >= config.halving_period:
                     current_reward = max(current_reward / 2, 1)
                 input_sum += max(current_reward, 1)
+                input_sum += get_fee_amount_by_output(blockchain, some_out)
 
     outputs = [Output("", config.creation_gas_fee, "", "gas"),
                Output(generate_address(private_key.get_verifying_key()),
-                      input_sum-config.creation_gas_fee, "",
+                      input_sum+miner_fee-config.creation_gas_fee, "",
                       "return")]
     tokens = []
 
@@ -474,9 +478,10 @@ def create_special_transaction(blockchain, private_key: ecdsa.SigningKey, type: 
     new_transaction = Transaction(private_key.get_verifying_key(),
                                   inputs,
                                   outputs,
-                                  tokens)
+                                  tokens,
+                                  only_after=only_after)
 
-    get_nonce_for_unique_address(blockchain, new_transaction)
+    get_nonce_for_unique_address_and_set_output_addresses(blockchain, new_transaction)
     sign(private_key, new_transaction)
 
     return new_transaction
@@ -545,7 +550,7 @@ def input_to_output(blockchain, input):
                 return tr.outputs[input.output_index]
 
 
-def get_nonce_for_unique_address(blockchain, target):
+def get_nonce_for_unique_address_and_set_output_addresses(blockchain, target):
     from Block import NewBlock
 
     print(blockchain.blockchain)
@@ -567,6 +572,8 @@ def get_nonce_for_unique_address(blockchain, target):
         print("In loop")
         target.nonce = random.randint(0, math.pow(10, 308))
         target.address = generate_serializable_address(target)
+
+    target.set_output_addresses()
 
 
 def get_block_id_by_transaction_address(blockchain, transaction_address):
@@ -629,6 +636,8 @@ def get_output_sum_from_input_list(blockchain, inputs: list):
                 if block_id - 1 >= config.halving_period:
                     current_reward = max(current_reward / 2, 1)
                 output_sum += max(current_reward, 1)
+                output_sum += get_fee_amount_by_output(blockchain, some_out)
+
 
     return output_sum
 
@@ -661,3 +670,12 @@ def generate_seed_phrase(words=12):
         result_str = f"{result_str} {word}"
 
     return result_str.strip()
+
+
+def get_fee_amount_by_output(blockchain, output):
+    from Block import NewBlock
+
+    block_id = get_block_id_by_transaction_address(output.transaction_address)
+    block: NewBlock = blockchain.get_block_by_id(block_id)
+    fee = block.get_total_fee()
+    return fee

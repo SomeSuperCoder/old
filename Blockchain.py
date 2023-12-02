@@ -177,3 +177,9 @@ class BlockChain:
 
         return zeros
 
+    def get_block_by_id(self, id):
+        for i in self.blockchain["blocks"]:
+            block_object = NewBlock.from_dict(i)
+
+            if block_object.id == id:
+                return block_object

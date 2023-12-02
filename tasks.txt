@@ -1,20 +1,14 @@
 Tasks:
 
 I want to do:
-13) Try except everything!
-20) What if the user enters an invalid output index in the input? Fix it!(just return false on try except)
-56) Create a Neon max supply!
-38) Require GAS for mint and stop_mint
-58) test the mint and stop_mint functions NOT DONE!
-60) Block and transaction messages
 
 I do NOT want to do:
-47) Allow using a block as an input(use input types for that, also create a get_fee_amount function for a block and for transactions!, and also ditch the fee output type for that)
-# 50) IN FOUR FUNCTIONS: mint, send, token_create and burn NOT DONE! Check if user has enough of each token for all the burns gases and commission and also get inputs for every token (create an approve/allowance method)
-48) Add an option to add a miner fee in the send_token function
+
+tests:
 52) Test the transaction_is_fraudulent function!!!!!!!!!!!!!!!!
-54) Add a block validation function to the Validator class and add some tests for it to(check prev hash and block id)
-57) Or there is a variant to add an "only after" property to a transaction, so it can be added only if another transaction is already added
+58) test the mint and stop_mint functions NOT DONE!
+??) Can a user mint neon? Check it!
+
 
 ===========================
-12) Create output types: send, reward, burn, commission, fee, mint, gas, stop_mint, maby these too -> (stake, mine_burn). Maby add Input types too?
+12) Create output types: send, reward, burn, commission, mint, gas, stop_mint, maby these too -> (stake, mine_burn). Maby add Input types too?

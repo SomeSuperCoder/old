@@ -7,7 +7,7 @@ import json
 
 
 class Transaction:
-    def __init__(self, public_key: str | ecdsa.VerifyingKey, inputs, outputs, tokens=None, nonce=0, signature=None):
+    def __init__(self, public_key: str | ecdsa.VerifyingKey, inputs, outputs, tokens=None, message="", only_after=None, nonce=0, signature=None):
         self.nonce = nonce
         if tokens is None:
             self.tokens = []
@@ -22,7 +22,10 @@ class Transaction:
         self.signature = signature
         self.inputs: List[Input] = inputs
         self.outputs: List[Output] = outputs
+        self.message = message
+        self.only_after = only_after
         self.address = utils.generate_serializable_address(self)
+        self.set_output_addresses()
 
     def serialize(self, strict=False):
         if not strict:
@@ -32,6 +35,8 @@ class Transaction:
                 "inputs": [json.loads(i.serialize()) for i in self.inputs],
                 "outputs": [json.loads(i.serialize()) for i in self.outputs],
                 "tokens": [json.loads(i.serialize(True)) for i in self.tokens],
+                "message": self.message,
+                "only_after": self.only_after,
                 "nonce": self.nonce
             })
         elif strict:
@@ -41,6 +46,8 @@ class Transaction:
                 "inputs": [json.loads(i.serialize()) for i in self.inputs],
                 "outputs": [json.loads(i.serialize()) for i in self.outputs],
                 "tokens": [json.loads(i.serialize(True)) for i in self.tokens],
+                "message": self.message,
+                "only_after": self.only_after,
                 "nonce": self.nonce,
                 "signature": self.signature
             })
@@ -51,12 +58,18 @@ class Transaction:
                            inputs=[Input.from_dict(i) for i in source["inputs"]],
                            outputs=[Output.from_dict(i) for i in source["outputs"]],
                            tokens=[NewToken.from_dict(i) for i in source["tokens"]],
+                           message=source["message"],
+                           only_after=source["only_after"],
                            # address=source["address"],
                            nonce=source["nonce"],
                            signature=source["signature"])
 
     def is_empty(self):
         return not bool(len(self.inputs) + len(self.outputs) + len(self.tokens))
+
+    def set_output_addresses(self):
+        for i in range(len(self.outputs)):
+            self.outputs[i] = self.address
 
 
 class Input:
@@ -84,6 +97,7 @@ class Output:
         self.amount = abs(amount)
         self.token_address = token_address
         self.type = type
+        self.transaction_address = None
 
     def serialize(self):
         return json.dumps({
