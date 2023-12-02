@@ -1,7 +1,7 @@
 from Validator import Validator
 from Block import NewBlock
 from Blockchain import BlockChain
-from Transaction import Transaction, Output
+from Transaction import Transaction, Output, Input
 from Token import NewToken
 
 import utils
@@ -16,12 +16,12 @@ test2_public_key = test2_private_key.get_verifying_key()
 blockchain = BlockChain()
 blockchain.load()
 
-print(blockchain.blockchain)
+# print(blockchain.blockchain)
 
 reward_transaction = Transaction(test1_public_key,
                                  [],
                                  [Output(utils.generate_address(test1_public_key),
-                                         amount=1000000000000000000000000000000000000000,
+                                         amount=-100000000000000,
                                          token_address="",
                                          type="reward")],
                                  )
@@ -42,12 +42,20 @@ stop_mint_transaction = Transaction(test1_public_key,
                                          type="stop_mint")],
                                  )
 
+empty_transaction = Transaction(test1_public_key,
+                                [],
+                                [],
+                                []
+                                 )
+
 some_test_token = NewToken("Solana", "SOL", test1_public_key, burn=0.5, commission=0.1)
 utils.sign(test1_private_key, some_test_token)
 
 
 def add_a_new_block(transaction):
+    print(f"Adding a transaction: {transaction.serialize()}")
     if not Validator.transaction_is_fraudulent(blockchain, transaction):
+        print("START ADDING PROCESS")
         new_block = NewBlock(blockchain.get_latest_block_id() + 1,
                          [transaction],
                          blockchain.get_latest_hash()
@@ -94,7 +102,10 @@ while True:
         case "add_token":
             utils.get_nonce_for_unique_address(blockchain, some_test_token)
             utils.sign(test1_private_key, some_test_token)
-            add_a_new_block(utils.create_token_transaction(blockchain, test1_private_key, some_test_token))
+            add_a_new_block(utils.create_special_transaction(blockchain,
+                                                             test1_private_key,
+                                                             "token",
+                                                             token=some_test_token))
         case "mint":
             utils.get_nonce_for_unique_address(blockchain, mint_transaction)
             utils.sign(test1_private_key, mint_transaction)
@@ -113,3 +124,9 @@ while True:
             add_a_new_block(stop_mint_transaction)
         case "token_list":
             print([i.address for i in blockchain.get_token_list()])
+        case "s":
+            print(utils.generate_seed_phrase())
+        case "em":
+            print(empty_transaction.is_empty())
+        case "glb":
+            print(blockchain.get_latest_blocks())

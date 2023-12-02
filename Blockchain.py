@@ -1,3 +1,5 @@
+import datetime
+
 from Block import NewBlock
 from Transaction import Transaction
 from Mint import Mint
@@ -136,3 +138,42 @@ class BlockChain:
                 result.append(transaction)
 
         return result
+
+    def get_latest_blocks(self):
+        print(-max(len(self.blockchain["blocks"]), config.amount_of_last_blocks_for_checks))
+        return self.blockchain[
+            "blocks"
+        ][
+            ::-min(len(self.blockchain["blocks"]), config.amount_of_last_blocks_for_checks)
+        ]
+
+    def get_current_difficulty(self):
+        latest_block_list = self.get_latest_blocks()
+        if len(latest_block_list) < 2:
+            return config.strict
+
+        pre_latest = latest_block_list[-2]
+        latest_block = latest_block_list[-1]
+        zeros = latest_block
+
+        for char in latest_block.hash:
+            if char == "0":
+                zeros += 1
+            else:
+                break
+
+        if datetime.datetime.utcfromtimestamp(
+                latest_block.timestamp
+        ) - datetime.datetime.utcfromtimestamp(
+                pre_latest.timestamp
+        ) > config.target_block_time:
+            zeros -= 1
+        if datetime.datetime.utcfromtimestamp(
+                latest_block.timestamp
+        ) - datetime.datetime.utcfromtimestamp(
+            pre_latest.timestamp
+        ) < config.target_block_time:
+            zeros += 1
+
+        return zeros
+

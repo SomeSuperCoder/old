@@ -1,11 +1,40 @@
+import datetime
+
+import ecdsa
+import statistics
+import utils
 import config
+
 from Transaction import Transaction, Output
 from Token import NewToken
 
-import utils
 
 
 class Validator:
+    @staticmethod
+    def block_is_fraudulent(blockchain, block):
+        from Block import NewBlock
+        block: NewBlock = block
+        block_zeros = 0
+
+        for char in block.hash:
+            if char == "0":
+                block_zeros += 1
+            else:
+                break
+
+        latest_timestamps = [i.timestamp for i in blockchain.get_latest_blocks()]
+        if block.id != blockchain.get_latest_block_id()+1:
+            return True
+        if block.previous_block_hash != blockchain.get_latest_hash():
+            return True
+        if block.timestamp < statistics.median(latest_timestamps):
+            return True
+        if block.timestamp > datetime.datetime.fromtimestamp(latest_timestamps[-1], datetime.timezone.utc)+config.room_for_timestamp_error:
+            return True
+        if block_zeros < blockchain.get_current_difficulty():
+            return True
+
     @staticmethod
     def check_only_one_block_reward(block):
         output_list = utils.get_block_outputs(block)
@@ -26,10 +55,16 @@ class Validator:
         # Get all non-native token outputs
         sorted_by_token = utils.sort_outputs_by_token(transaction.outputs)
         all_non_native: list[Output] = []
+        all_native: list[Output] = []
         for token_address, outputs in sorted_by_token.items():
             for out in outputs:
                 if token_address != "":
                     all_non_native.append(out)
+
+        for token_address, outputs in sorted_by_token.items():
+            for out in outputs:
+                if token_address == "":
+                    all_native.append(out)
 
         print(sorted_by_token)
         print(all_non_native)
@@ -73,8 +108,31 @@ class Validator:
                     print("check if send outputs follow token rules")
                     return True
 
+            if out.type in ["mint", "stop_mint"]:
+                token_owner = None
+                for i in blockchain.get_token_list():
+                    if i.address == out.token_address:
+                        token_owner = i.owner_id
+                        break
+
+                if utils.generate_address(transaction.public_key) != token_owner:
+                    print("Token signature verify error")
+                    return True
+
             # do the non-negative check
             if out.amount < 0:
+                print("do the non-negative check")
+                return True
+
+            # check decimals for non-native
+            if out.amount != round(out.amount, token.decimals):
+                print("check decimals for non-native")
+                return True
+
+        # check decimals for NATIVE
+        for out in all_native:
+            if out.amount != round(out.amount, config.native_coin_decimals):
+                print("check decimals for NATIVE")
                 return True
 
         # check if the transaction inputs are not bigger than the outputs
@@ -96,6 +154,7 @@ class Validator:
 
         for token_address, amount in sums_for_outs:
             if sums_for_ins[token_address] < amount:
+                print("check if the transaction inputs are not bigger than the outputs")
                 return True
 
         print("END")
@@ -103,38 +162,44 @@ class Validator:
         # check if transaction inputs are real
         for _in in transaction.inputs:
             if utils.input_to_output(blockchain, _in) is None:
+                print("check if transaction inputs are real")
                 return True
 
         # check if a transaction with the same address exists
         for i in blockchain.get_transaction_list():
             if i.address == transaction.address:
+                print("check if a transaction with the same address exists")
                 return True
 
         # check if any of the added token have an existing duplicate with the same address
         transaction_token_address_list = [i.address for i in transaction.tokens]
         for i in blockchain.get_token_list():
             if i.address in transaction_token_address_list:
+                print("check if any of the added token have an existing duplicate with the same address")
                 return True
 
         # check gas for tokens
-        sorted_by_type_for_gas_check_in_neon_outputs = utils.sort_outputs_by_type(sorted_by_token[""])["gas"]
+        print("="*20)
+        print("START gas for tokens")
+        sorted_by_type_for_gas_check_in_neon_outputs = utils.sort_outputs_by_type(sorted_by_token[""]).get("gas") or []
+        print([i.serialize() for i in sorted_by_type_for_gas_check_in_neon_outputs])
         sorted_by_type_for_gas_check_in_neon_output_sum = 0
 
-        current_reward = config.base_mining_reward
-
         for some_out in sorted_by_type_for_gas_check_in_neon_outputs:
-            if some_out.type not in ["burn", "gas", "reward"]:
+            if some_out.type == "gas":
                 sorted_by_type_for_gas_check_in_neon_output_sum += some_out.amount
 
-            if some_out.token_address == "":
-                if some_out.type == "reward":
-                    block_id = utils.get_block_id_by_transaction_address(blockchain, transaction.address)
-
-                    if block_id - 1 >= config.halving_period:
-                        current_reward = max(current_reward / 2, 1)
-                    sorted_by_type_for_gas_check_in_neon_output_sum += max(current_reward, 1)
-
+        print(f"THE SUM YOU ARE LOOKING FOR: {sorted_by_type_for_gas_check_in_neon_output_sum}")
         if sorted_by_type_for_gas_check_in_neon_output_sum < len(transaction.tokens) * config.creation_gas_fee:
+            print("check gas for tokens")
+            return True
+
+        print("END gas for tokens")
+        print("="*20)
+
+        # check the digital signature
+        if not utils.verify(transaction):
+            print("check the digital signature for transaction")
             return True
 
         return False

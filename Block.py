@@ -8,12 +8,13 @@ from typing import List
 
 
 class NewBlock:
-    def __init__(self, id: int, transactions: list, previous_block_hash: str, hash=None, nonce=0):
+    def __init__(self, id: int, transactions: list, previous_block_hash: str, hash=None, nonce=0, timestamp=None):
         self.id = id
         self.transactions: List[Transaction] = transactions
         self.previous_block_hash = previous_block_hash
         self.hash = hash
         self.nonce = nonce
+        self.timestamp = timestamp
 
     def serialize(self, strict=False):
         if not strict:
@@ -21,6 +22,7 @@ class NewBlock:
                 "id": self.id,
                 "transactions": [json.loads(i.serialize(True)) for i in self.transactions],
                 "previous_block_hash": self.previous_block_hash,
+                "timestamp": self.timestamp,
                 "nonce": self.nonce
             })
         elif strict:
@@ -28,6 +30,7 @@ class NewBlock:
                 "id": self.id,
                 "transactions": [json.loads(i.serialize(True)) for i in self.transactions],
                 "previous_block_hash": self.previous_block_hash,
+                "timestamp": self.timestamp,
                 "hash": self.hash,
                 "nonce": self.nonce
             })
@@ -38,19 +41,20 @@ class NewBlock:
                             transactions=[Transaction.from_dict(i) for i in source["transactions"]],
                             previous_block_hash=source["previous_block_hash"],
                             hash=source["hash"],
-                            nonce=source["nonce"],)
+                            nonce=source["nonce"],
+                        timestamp=source["timestamp"])
 
-    def is_empty(self):
-        if self.id == 1:
-            return False
-
-        if not bool(len(self.transactions)):
-            return True
-
-        for i in self.transactions:
-            if i.is_empty():
-                print("Transaction is empty")
-                return False
+    # def is_empty(self):
+    #     if self.id == 1:
+    #         return False
+    #
+    #     if not bool(len(self.transactions)):
+    #         return True
+    #
+    #     for i in self.transactions:
+    #         if i.is_empty():
+    #             print("Transaction is empty")
+    #             return False
 
 # class ExistingBlock:
 #     def __init__(self, id: int, transactions: list, hash: str, previous_block_hash: str, nonce: int):

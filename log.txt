@@ -1,0 +1,141 @@
+>> stt2
+Amount: 60
+Begin get_potential_inputs
+capybara
+Transaction sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': []}
+Transaction sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': []}
+[]
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': [<Transaction.Output object at 0x7f150894c610>]}
+Processing sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP
+Processing sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': [<Transaction.Output object at 0x7f150894c610>]}
+Unspent appending: [<Transaction.Output object at 0x7f1508bdfed0>, 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 0]
+Unspent appending: [<Transaction.Output object at 0x7f150894c610>, 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 0]
+result: [[<Transaction.Output object at 0x7f1508bdfed0>, 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 0], [<Transaction.Output object at 0x7f150894c610>, 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 0]]
+reward
+Index is 0
+reward
+Index is 0
+Result:
+Get potential inputs in the get token balance
+['{"transaction_address": "sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP", "output_index": 0}', '{"transaction_address": "sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P", "output_index": 0}']
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+input_to_output result
+{"to": "nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV", "amount": 100000000000000, "token_address": "", "type": "reward"}
+The input is:
+<Transaction.Input object at 0x7f150894c8d0>
+input_to_output result
+{"to": "nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV", "amount": 100000000000000, "token_address": "", "type": "reward"}
+Token balance: 75.0
+Begin get_potential_inputs
+capybara
+Transaction sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': []}
+Transaction sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': []}
+[]
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': [<Transaction.Output object at 0x7f150894cfd0>]}
+Processing sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP
+Processing sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': [<Transaction.Output object at 0x7f150894cfd0>]}
+Unspent appending: [<Transaction.Output object at 0x7f1508bdfed0>, 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 0]
+Unspent appending: [<Transaction.Output object at 0x7f150894cfd0>, 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 0]
+result: [[<Transaction.Output object at 0x7f1508bdfed0>, 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 0], [<Transaction.Output object at 0x7f150894cfd0>, 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 0]]
+reward
+Index is 0
+reward
+Index is 0
+Result:
+Get potential inputs in the get token balance
+['{"transaction_address": "sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP", "output_index": 0}', '{"transaction_address": "sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P", "output_index": 0}']
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+input_to_output result
+{"to": "nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV", "amount": 100000000000000, "token_address": "", "type": "reward"}
+The input is:
+<Transaction.Input object at 0x7f150894cd50>
+input_to_output result
+{"to": "nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV", "amount": 100000000000000, "token_address": "", "type": "reward"}
+Begin get_potential_inputs
+capybara
+Transaction sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': []}
+Transaction sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': []}
+[]
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': [<Transaction.Output object at 0x7f150894d210>]}
+Processing sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP
+Processing sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P
+{'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP': [<Transaction.Output object at 0x7f1508bdfed0>], 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P': [<Transaction.Output object at 0x7f150894d210>]}
+Unspent appending: [<Transaction.Output object at 0x7f1508bdfed0>, 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 0]
+Unspent appending: [<Transaction.Output object at 0x7f150894d210>, 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 0]
+result: [[<Transaction.Output object at 0x7f1508bdfed0>, 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 0], [<Transaction.Output object at 0x7f150894d210>, 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 0]]
+reward
+Index is 0
+reward
+Index is 0
+Result:
+get_potential_inputs
+['{"transaction_address": "sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP", "output_index": 0}', '{"transaction_address": "sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P", "output_index": 0}']
+Before this
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+Halving!
+Adding to input_sum in send: 25.0
+The input is:
+<Transaction.Input object at 0x7f150894c9d0>
+Adding to input_sum in send: 25.0
+Input sum in send: 50.0
+Output sum in send: 60
+{'version': 1, 'blocks': [{'id': 1, 'transactions': [{'address': 'sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 'public_key': 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEX4GVbVgmutfTDa7StcjJjnIEbB7IMj2jNkRUdhg/t8pUulEbi3grxQhZYkEui5h5SW47YL6+58Nph9HVhIuaUA==', 'inputs': [], 'outputs': [{'to': 'nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV', 'amount': 100000000000000, 'token_address': '', 'type': 'reward'}], 'tokens': [], 'nonce': 0, 'signature': 'IWpc5bBpoOu+BehsOqjsZK0uC6Q4kclEdkcOTQxn4qJaPoAsY3laDEs5KPZLOMxvQ2IqutHSYKBKUoxwgrKunQ=='}], 'previous_block_hash': '0000000000000000000000000000000000000000000000000000000000000000', 'hash': 'b4cb4a87fe178cc605e5deaa09cf415f45f2af500de5c4110cc48199c69ff8cf', 'nonce': 0}, {'id': 2, 'transactions': [{'address': 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP', 'public_key': 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEX4GVbVgmutfTDa7StcjJjnIEbB7IMj2jNkRUdhg/t8pUulEbi3grxQhZYkEui5h5SW47YL6+58Nph9HVhIuaUA==', 'inputs': [], 'outputs': [{'to': 'nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV', 'amount': 100000000000000, 'token_address': '', 'type': 'reward'}], 'tokens': [], 'nonce': 72206714473565234731616455276833700133099899411402879583750641283842253146342544593018477125189186619333501071597753087223889303287085950948331550625535799826953328182522825509546771437940916862450331305571832115597999064582024977064155411392121103247822889545197710333323317153518507901430517223503859477097, 'signature': 'W+QyTedy87VDvHbZMQU7D3Xffo3EeaSwIvr4V+/ccYVl4GlM+dnXkQlQEJjDqaE5Tfkhf4wqrU1C1upFd5jDng=='}], 'previous_block_hash': 'b4cb4a87fe178cc605e5deaa09cf415f45f2af500de5c4110cc48199c69ff8cf', 'hash': '1a705b3150e71820bc9633e213eec11a013c2429bbc5a5a3447d4e0b8ad1302c', 'nonce': 0}]}
+['sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P', 'sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP']
+Adding a transaction: {"public_key": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEX4GVbVgmutfTDa7StcjJjnIEbB7IMj2jNkRUdhg/t8pUulEbi3grxQhZYkEui5h5SW47YL6+58Nph9HVhIuaUA==", "inputs": [{"transaction_address": "sr1PArhtgAERJ2A9Ed1xqB8ZawLLWZdUNuiP", "output_index": 0}, {"transaction_address": "sr1MDxF2hawzV5YAtYcx9bK27vT9jA5npX4P", "output_index": 0}], "outputs": [{"to": "nc1K4vbahD8VrpMLqZ2kGJaZPFDZtRAV2mPu", "amount": 60, "token_address": "", "type": "send"}, {"to": "nc1MTtqsjNnawisvnokUZ1Upz1pwTaJBG3BV", "amount": 10.0, "token_address": "", "type": "return"}], "tokens": [], "nonce": 0}
+{'': [<Transaction.Output object at 0x7f150894cc50>, <Transaction.Output object at 0x7f150894cf90>]}
+[]
+{}
+Transaction outputs:
+In
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+In
+<Transaction.Input object at 0x7f150894c9d0>
+The input is:
+<Transaction.Input object at 0x7f150894c9d0>
+{'': [<Transaction.Input object at 0x7f1508947c50>, <Transaction.Input object at 0x7f150894c9d0>]}
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+Again the input is: <Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f150894c9d0>
+Again the input is: <Transaction.Input object at 0x7f150894c9d0>
+{'': 50.0}
+{}
+END
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f1508947c50>
+The input is:
+<Transaction.Input object at 0x7f150894c9d0>
+====================
+START gas for tokens
+[]
+THE SUM YOU ARE LOOKING FOR: 0
+END gas for tokens
+====================
+START ADDING PROCESS
+50006ea518a727b3afa7d4a338df16a59e32e8864e59ff8eb25ca5ce59e33274

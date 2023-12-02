@@ -1,3 +1,5 @@
+import datetime
+
 import ecdsa
 import hashlib
 import base58
@@ -67,24 +69,26 @@ def generate_serializable_address(token):
     return "sr" + bitcoin_address.decode()
 
 
-def increment_mine(target):
-    hash = get_hash(target)
-
-    while hash[:config.strict] != "0"*config.strict:
-        print(f"Hash: {hash} Try №{target.nonce}")
-        target.nonce += 1
-        hash = get_hash(target)
-
-    print("\r" + hash)
-    target.hash = hash
+# def increment_mine(target):
+#     hash = get_hash(target)
+#
+#     while hash[:config.strict] != "0"*config.strict:
+#         print(f"Hash: {hash} Try №{target.nonce}")
+#         target.nonce += 1
+#         hash = get_hash(target)
+#
+#     print("\r" + hash)
+#     target.hash = hash
 
 
 def random_mine(target):
     hash = get_hash(target)
     i = 1
-
+    target.timestamp = datetime.datetime.utcnow().timestamp()
     while hash[:config.strict] != "0" * config.strict:
-        print(f"Hash: {hash} Try №{i}")
+        print(f"Hash: {hash} Try №{i} UNIX Time: {target.timestamp}")
+        target.timestamp = datetime.datetime.now(datetime.timezone.utc).timestamp()
+        # print(round(target.timestamp))
         target.nonce = random.randint(0, math.pow(10, 308))
         i += 1
         hash = get_hash(target)
@@ -234,22 +238,14 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     current_reward = config.base_mining_reward
     print(f"Token balance: {get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address)}")
     if amount > get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address):
-        print("Not enough money! ;(erfererregregregrgergerg")
+        print("Not enough money! ;(")
         return None
 
     inputs: List[Input] = get_potential_inputs(blockchain, user_private_key.get_verifying_key(), token_address, target_amount=amount)
     print("get_potential_inputs")
     print([i.serialize() for i in inputs])
+    print("Before this")
     outputs: List[Output] = []
-    # all_blockchain_transaction_outputs = {}
-
-    # for i in range(len(blockchain.blockchain["blocks"])):
-    #     one: dict = blockchain.blockchain["blocks"][i]
-    #     block_object = NewBlock.from_dict(one)
-    #     for tr in block_object.transactions:
-    #         all_blockchain_transaction_outputs[tr.address] = []
-    #         for out in tr.outputs:
-    #             all_blockchain_transaction_outputs[tr.address].append(out)
 
     input_sum = 0
     output_sum = 0
@@ -264,9 +260,11 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
             if some_out.type == "reward":
                 block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
 
-                if block_id-1 >= config.halving_period:
-                    current_reward = max(current_reward / 2, 1)
+                print(f"Adding to input_sum in send: {max(current_reward, 1)}")
                 input_sum += max(current_reward, 1)
+                if block_id-1 >= config.halving_period:
+                    print("Halving!")
+                    current_reward = max(current_reward / 2, 1)
 
     outputs.append(Output(to, amount, token_address, "send"))
     if token_address != "":
@@ -280,6 +278,9 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     for out in outputs:
         output_sum += out.amount
 
+    print(f"Input sum in send: {input_sum}")
+    print(f"Output sum in send: {output_sum}")
+
     outputs.append(Output(generate_address(user_private_key.get_verifying_key()), input_sum - output_sum, token_address, type="return"))
 
     new_transaction = Transaction(public_key=user_private_key.get_verifying_key(), inputs=inputs, outputs=outputs)
@@ -289,6 +290,86 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     # print(f"Output sum: {output_sum}")
 
     return new_transaction
+
+# def advanced_send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token_address="", miner_fee=0):
+#     from Transaction import Transaction, Output, Input
+#     from Block import NewBlock
+#     from Token import NewToken
+#
+#     if token_address != "":
+#         token_object: NewToken = [i for i in blockchain.get_token_list() if i.address == token_address][0]
+#         amount = round(amount, token_object.decimals)
+#     if token_address == "":
+#         amount = round(amount, config.native_coin_decimals)
+#
+#     current_reward = config.base_mining_reward
+#     # print(f"Token balance: {get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address)}")
+#     # if amount > get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address):
+#     #     print("Not enough money! ;(")
+#     #     return None
+#
+#     inputs: List[Input] = get_potential_inputs(blockchain, user_private_key.get_verifying_key(), token_address, target_amount=amount)
+#     print("get_potential_inputs")
+#     print([i.serialize() for i in inputs])
+#     outputs: List[Output] = []
+#
+#     input_sum = {}
+#     output_sum = {}
+#
+#     for _in in inputs:
+#         some_out: Output = input_to_output(blockchain, _in)
+#         if input_sum.get(some_out.token_address) is None:
+#             input_sum[some_out.token_address] = 0
+#
+#         if not some_out.type in ["burn", "gas", "reward"]:
+#             input_sum[some_out.token_address] += some_out.amount
+#
+#         if some_out.token_address == "":
+#             if some_out.type == "reward":
+#                 block_id = get_block_id_by_transaction_address(blockchain, _in.transaction_address)
+#
+#                 if block_id-1 >= config.halving_period:
+#                     current_reward = max(current_reward / 2, 1)
+#                 input_sum[some_out.token_address] += max(current_reward, 1)
+#
+#     outputs.append(Output(to, amount, token_address, "send"))
+#     if token_address != "":
+#         for tk in blockchain.get_token_list():
+#             tk: NewToken = tk
+#             if tk.burn:
+#                 outputs.append(Output("", amount * tk.burn, token_address, "burn"))
+#             if tk.commission:
+#                 outputs.append(Output(generate_address(tk.public_key), amount * tk.commission, token_address, "commission"))
+#
+#     for out in outputs:
+#         if output_sum.get(out.token_address) is None:
+#             output_sum[out.token_address] = 0
+#
+#         output_sum[out.token_address] += out.amount
+#
+#     # advanced token return
+#     for tk_address, tk_sum in input_sum.items():
+#         outputs.append(
+#             Output(generate_address(user_private_key.get_verifying_key()),
+#                    input_sum.get(token_address) - output_sum.get(tk_address) or 0,
+#                    tk_address, type="return")
+#         )
+#
+#     # check if user has enough of each token
+#     for tk_address, tk_sum in output_sum.items():
+#         if get_token_balance(blockchain,
+#                              user_private_key.get_verifying_key(),
+#                              tk_address) < tk_sum:
+#             print("Advanced not enough money!")
+#             return None
+#
+#     new_transaction = Transaction(public_key=user_private_key.get_verifying_key(), inputs=inputs, outputs=outputs)
+#     get_nonce_for_unique_address(blockchain, new_transaction)
+#     sign(private_key=user_private_key, target=new_transaction)
+#     # print(f"Input sum: {input_sum}")
+#     # print(f"Output sum: {output_sum}")
+#
+#     return new_transaction
 
 
 def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=""):
@@ -323,10 +404,20 @@ def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=
     return balance
 
 
-def create_token_transaction(blockchain, private_key: ecdsa.SigningKey, token):
+def create_special_transaction(blockchain, private_key: ecdsa.SigningKey, type: str, token=None, amount=0, token_address=""):
+    if type not in ["token", "mint", "stop_mint", "burn"]:
+        return None
+
     from Transaction import Transaction, Output
 
-    inputs = get_potential_inputs(blockchain, private_key.get_verifying_key(), target_amount=config.creation_gas_fee)
+    if type in ["mint", "burn"]:
+        if token_address != "":
+            token_object = [i for i in blockchain.get_token_list() if i.address == token_address][0]
+            amount = round(amount, token_object.decimals)
+        if token_address == "":
+            amount = round(amount, config.native_coin_decimals)
+
+    inputs = get_potential_inputs(blockchain, private_key.get_verifying_key(), token_address="", target_amount=config.creation_gas_fee)
     # inputs_converted = [input_to_output(blockchain, i) for i in inputs]
     input_sum = 0
     current_reward = config.base_mining_reward
@@ -344,15 +435,48 @@ def create_token_transaction(blockchain, private_key: ecdsa.SigningKey, token):
                     current_reward = max(current_reward / 2, 1)
                 input_sum += max(current_reward, 1)
 
-    print(f"THE INPUT SUM IS: {input_sum}")
+    outputs = [Output("", config.creation_gas_fee, "", "gas"),
+               Output(generate_address(private_key.get_verifying_key()),
+                      input_sum-config.creation_gas_fee, "",
+                      "return")]
+    tokens = []
+
+    match type:
+        case "token":
+            tokens.append(token)
+        case "mint":
+            outputs.append(
+                Output(generate_address(private_key.get_verifying_key()),
+                       amount,
+                       token_address,
+                       "mint")
+            )
+        case "stop_mint":
+            outputs.append(
+                Output(
+                    generate_address(private_key.get_verifying_key()),
+                    0,
+                    token_address,
+                    "stop_mint"
+                )
+            )
+        case "burn":
+            outputs.append(
+                Output(
+                    "",
+                    amount,
+                    token_address,
+                    "burn"
+                )
+            )
+
+    # print(f"THE INPUT SUM IS: {input_sum}")
     new_transaction = Transaction(private_key.get_verifying_key(),
                                   inputs,
-                                  [
-                                      Output("", config.creation_gas_fee, "", "gas"),
-                                      Output(generate_address(private_key.get_verifying_key()), input_sum-config.creation_gas_fee, "", "return")
-                                  ],
-                                  tokens=[token])
+                                  outputs,
+                                  tokens)
 
+    get_nonce_for_unique_address(blockchain, new_transaction)
     sign(private_key, new_transaction)
 
     return new_transaction
@@ -521,3 +645,19 @@ def sort_inputs_by_output_token_address(blockchain, inputs):
         result[out.token_address].append(_in)
 
     return result
+
+
+def generate_seed_phrase(words=12):
+    result = []
+    result_str = ""
+
+    with open("words.txt") as file:
+        word_list = file.read().strip().split("\n")
+
+    for i in range(words):
+        result.append(random.choice(word_list))
+
+    for word in result:
+        result_str = f"{result_str} {word}"
+
+    return result_str.strip()
