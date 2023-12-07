@@ -3,6 +3,7 @@ from Block import NewBlock
 from Blockchain import BlockChain
 from Transaction import Transaction, Output, Input
 from Token import NewToken
+from SmartContract import SmartContract
 
 import utils
 
@@ -13,34 +14,41 @@ print(f"Test1 address: {utils.generate_address(test1_public_key)}")
 test2_private_key = utils.string_to_private_key("test2")
 test2_public_key = test2_private_key.get_verifying_key()
 
+miner_private_key = utils.string_to_private_key("miner")
+miner_public_key = miner_private_key.get_verifying_key()
+
 blockchain = BlockChain()
 blockchain.load()
 
 # print(blockchain.blockchain)
 
-reward_transaction = Transaction(test1_public_key,
-                                 [],
-                                 [Output(utils.generate_address(test1_public_key),
-                                         amount=-100000000000000,
-                                         token_address="",
-                                         type="reward")],
+reward_transaction = Transaction(miner_public_key,
+                                 outputs=[
+                                     Output("",
+                                            utils.generate_address(miner_public_key),
+                                            amount=100000000000000,
+                                            token_address="",
+                                            type="reward")
+                                          ],
                                  )
 
-mint_transaction = Transaction(test1_public_key,
-                                 [],
-                                 [Output(utils.generate_address(test1_public_key),
-                                         amount=500,
-                                         token_address="sr15QnAxL2vbk3vjgiVayGBH3vXBCE5yrTjE",
-                                         type="mint")],
-                                 )
+# mint_transaction = Transaction(test1_public_key,
+#                                  [],
+#                                  [Output(utils.generate_address(test1_public_key),
+#                                          amount=500,
+#                                          token_address="sr15QnAxL2vbk3vjgiVayGBH3vXBCE5yrTjE",
+#                                          type="mint")],
+#                                  )
+mint_transaction = utils.create_special_transaction(blockchain,
+                                                    test1_private_key,
+                                                    token_address="",
+                                                    amount=10,
+                                                    type="mint")
 
-stop_mint_transaction = Transaction(test1_public_key,
-                                 [],
-                                 [Output(utils.generate_address(test1_public_key),
-                                         amount=500,
-                                         token_address="sr15QnAxL2vbk3vjgiVayGBH3vXBCE5yrTjE",
-                                         type="stop_mint")],
-                                 )
+stop_mint_transaction = utils.create_special_transaction(blockchain,
+                                                    test1_private_key,
+                                                    token_address="",
+                                                    type="stop_mint")
 
 empty_transaction = Transaction(test1_public_key,
                                 [],
@@ -69,7 +77,7 @@ while True:
     match cmd:
         case "genesis":
             utils.get_nonce_for_unique_address_and_set_output_addresses(blockchain, reward_transaction)
-            utils.sign(test1_private_key, reward_transaction)
+            utils.sign(miner_private_key, reward_transaction)
             add_a_new_block(reward_transaction)
             reward_transaction.nonce = 0
             reward_transaction.address = ""
@@ -78,26 +86,27 @@ while True:
         case "t2b":
             print(utils.get_token_balance(blockchain, test2_public_key, token_address=""))
         case "stt2":
-            amount = int(input("Amount: "))
+            amount = float(input("Amount: "))
             add_a_new_block(utils.send_token(blockchain,
                                                test1_private_key,
                                                utils.generate_address(test2_public_key),
                                                amount,
-                                               ""))
+                                               "",
+                                             miner_fee=2
+                                             ))
         case "stt1":
-            amount = int(input("Amount: "))
+            amount = float(input("Amount: "))
             add_a_new_block(utils.send_token(blockchain,
-                                               test2_private_key,
-                                               utils.generate_address(test1_public_key),
-                                               amount,
-                                               ""))
+                                             miner_private_key,
+                                             utils.generate_address(test1_public_key),
+                                             amount))
         case "get_fraud":
             print(Validator.transaction_is_fraudulent(
                 blockchain, utils.send_token(blockchain,
-                                               test1_private_key,
-                                               utils.generate_address(test1_public_key),
-                                               2,
-                                               "")
+                                                test1_private_key,
+                                                utils.generate_address(test1_public_key),
+                                                2,
+                                                "")
             ))
         case "add_token":
             utils.get_nonce_for_unique_address_and_set_output_addresses(blockchain, some_test_token)
@@ -132,3 +141,10 @@ while True:
             print(empty_transaction.is_empty())
         case "glb":
             print(blockchain.get_latest_blocks())
+        case "mb":
+            print(utils.get_token_balance(blockchain, miner_public_key, token_address=""))
+        case "sc_test":
+            sc = SmartContract("with open(\"/result/result.json\", \"w\") as f: f.write(str(config.base_mining_reward))")
+            sc.execute()
+        case "diff":
+            print(blockchain.get_current_difficulty())

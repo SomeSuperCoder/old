@@ -1,14 +1,14 @@
 Tasks:
 
-I want to do:
+Validator stuff:
+??) SmartContract messages (use a /code/message.json file for that (in should contain the storage too) add gas fee for storage btw)
+??) Docker container with preinstalled dependencies
+??) Those docker container that you forgot
 
-I do NOT want to do:
 
 tests:
 52) Test the transaction_is_fraudulent function!!!!!!!!!!!!!!!!
-58) test the mint and stop_mint functions NOT DONE!
-??) Can a user mint neon? Check it!
-
+58) test the mint, stop_mint and burn functions NOT DONE!
 
 ===========================
-12) Create output types: send, reward, burn, commission, mint, gas, stop_mint, maby these too -> (stake, mine_burn). Maby add Input types too?
+12) Create output types: send, reward, burn, commission, mint, gas, stop_mint, may be these too -> (stake, mine_burn). Maby add Input types too?

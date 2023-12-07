@@ -139,43 +139,54 @@ class BlockChain:
 
         return result
 
-    def get_latest_blocks(self):
-        print(-max(len(self.blockchain["blocks"]), config.amount_of_last_blocks_for_checks))
+    def get_latest_blocks(self, amount=2):
+        print(-min(len(self.blockchain["blocks"]), amount))
         return self.blockchain[
             "blocks"
         ][
-            ::-min(len(self.blockchain["blocks"]), config.amount_of_last_blocks_for_checks)
+            -min(len(self.blockchain["blocks"]), amount):
         ]
 
     def get_current_difficulty(self):
         latest_block_list = self.get_latest_blocks()
+        print(latest_block_list)
+        print(len(latest_block_list))
+
         if len(latest_block_list) < 2:
             return config.strict
 
-        pre_latest = latest_block_list[-2]
-        latest_block = latest_block_list[-1]
-        zeros = latest_block
+        pre_latest = NewBlock.from_dict(latest_block_list[-2])
+        latest_block = NewBlock.from_dict(latest_block_list[-1])
+        zeros = 0
 
         for char in latest_block.hash:
             if char == "0":
                 zeros += 1
             else:
                 break
-
+        print(f"Zeros are {zeros}")
+        print(datetime.datetime.utcfromtimestamp(
+                latest_block.timestamp
+        ) - datetime.datetime.utcfromtimestamp(
+                pre_latest.timestamp
+        ))
         if datetime.datetime.utcfromtimestamp(
                 latest_block.timestamp
         ) - datetime.datetime.utcfromtimestamp(
                 pre_latest.timestamp
         ) > config.target_block_time:
+            print("DECREASE ZEROS!")
             zeros -= 1
+            print(f"Now zeros are: {zeros}")
         if datetime.datetime.utcfromtimestamp(
                 latest_block.timestamp
         ) - datetime.datetime.utcfromtimestamp(
             pre_latest.timestamp
         ) < config.target_block_time:
+            print("INCREASE ZEROS!")
             zeros += 1
 
-        return zeros
+        return max(zeros, 0)
 
     def get_block_by_id(self, id):
         for i in self.blockchain["blocks"]:
@@ -183,3 +194,20 @@ class BlockChain:
 
             if block_object.id == id:
                 return block_object
+
+    def get_output_list(self):
+        result = []
+        for i in range(len(self.blockchain["blocks"])):
+            one: dict = self.blockchain["blocks"][i]
+            block_object = NewBlock.from_dict(one)
+
+            for transaction in block_object.transactions:
+                for out in transaction.outputs:
+                    result.append(out)
+
+        return result
+
+    def get_collection_owner(self, collection):
+        for token in self.get_token_list():
+            if token.collection == collection:
+                return token.public_key
