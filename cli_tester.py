@@ -68,7 +68,9 @@ def add_a_new_block(transaction):
                          [transaction],
                          blockchain.get_latest_hash()
                          )
+        utils.sign(miner_private_key, new_block)
         utils.random_mine(new_block)
+        print(Validator.block_is_fraudulent(blockchain, new_block))
         blockchain.add_block(new_block)
 
 
@@ -148,3 +150,5 @@ while True:
             sc.execute()
         case "diff":
             print(blockchain.get_current_difficulty())
+        case "addr":
+            print(utils.generate_address(utils.string_to_private_key(input("Seed phrase: ")).get_verifying_key()))

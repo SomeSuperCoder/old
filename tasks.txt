@@ -1,14 +1,26 @@
 Tasks:
 
-Validator stuff:
-??) SmartContract messages (use a /code/message.json file for that (in should contain the storage too) add gas fee for storage btw)
-??) Docker container with preinstalled dependencies
-??) Those docker container that you forgot
+Other stuff:
+??) Decimals in balance, send and create special
+??) Add stakes and SmartContract creation and executions to create_special :(
+??) Add some extra data(prev validator address) to the choose random validator function, so we can choose a new fallback validator
+??) Fix the 0.1 + 0.2 bug
 
+GET STAKING NODES FUNCTION OS WORKING WRONG
+
+Validator tasks:
+??) Check all block transactions and smart contract executions in check_block_is_fraudulent
+
+SmartContract:
+??) SmartContract messages (use a /code/message.json file for that (in should contain the storage too))
+??) Add gas fee for storage
+??) Call SmartContract constructor on create
+
+??) Docker container with preinstalled dependencies
 
 tests:
 52) Test the transaction_is_fraudulent function!!!!!!!!!!!!!!!!
 58) test the mint, stop_mint and burn functions NOT DONE!
 
 ===========================
-12) Create output types: send, reward, burn, commission, mint, gas, stop_mint, may be these too -> (stake, mine_burn). Maby add Input types too?
+12) Create output types: send, reward, burn, commission, mint, gas, stop_mint, release, stake

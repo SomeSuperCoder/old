@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from Block import NewBlock
 from Transaction import Transaction
@@ -128,7 +129,7 @@ class BlockChain:
 
         return result
 
-    def get_transaction_list(self) -> list[NewToken]:
+    def get_transaction_list(self) -> list[Transaction]:
         result = []
         for i in range(len(self.blockchain["blocks"])):
             one: dict = self.blockchain["blocks"][i]
@@ -211,3 +212,77 @@ class BlockChain:
         for token in self.get_token_list():
             if token.collection == collection:
                 return token.public_key
+
+    def get_staking_nodes(self):
+        result = {}
+        for out in self.get_output_list():
+            if out.type == "stake":
+                prev_data = result.get(out.from_)
+                if prev_data is None:
+                    result[out.from_] = [out.amount, 1]
+                else:
+                    prev_data[0] += out.amount
+                    prev_data[1] += 1
+            if out.type == "release":
+                result.pop(out.to)
+
+        return result
+
+    def select_random_validator(self):
+        random.seed(int.from_bytes(self.get_latest_hash().encode()))
+
+        nodes = self.get_staking_nodes()
+        weight_map = {}
+
+        for address, amount_and_time in nodes.items():
+            weight_map[address] = round(utils.slow_growth_multiplication(amount_and_time[0], amount_and_time[1]))
+
+        address_list = list(weight_map.keys())
+        weight_list = list(weight_map.values())
+
+        try:
+            return random.choices(population=address_list, weights=weight_list, k=1)[0]
+        except IndexError:
+            return None
+
+    def get_pof_hash_list(self):
+        pofs = []
+        hashed_pofs = []
+
+        for out in self.get_output_list():
+            if out.type == "slash":
+                pofs.append(out.pof)
+
+        for pof in pofs:
+            hashed_pofs = utils.get_hash(NewBlock.from_dict(pof))
+
+        return hashed_pofs
+
+    def get_smart_contract_list(self):
+        result = []
+        for tx in self.get_transaction_list():
+            for sc in tx.smart_contracts:
+                result.append(sc)
+
+        return result
+
+    def address_is_smart_contract(self, address):
+        address_list = [i.address for i in self.get_smart_contract_list()]
+        if address in address_list:
+            return True
+        else:
+            return False
+
+    def get_smart_contract_by_address(self, address):
+        for sc in self.get_smart_contract_list():
+            if sc.address == address:
+                return sc
+
+    def get_smart_contract_storage(self, address):
+        for block in self.blockchain["blocks"].reverse():
+            block_object = NewBlock.from_dict(block)
+            for sc_address, storage in block_object.sc_data.items():
+                if sc_address == address:
+                    return storage
+
+        return {}

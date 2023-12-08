@@ -76,3 +76,31 @@ class SmartContract:
                 nonce=source["nonce"],
                 language=source["language"]
         )
+
+
+class Message:
+    def __init__(self, sender_public_key, data, payed_amount=None, payed_token=None, storage={}):
+        self.sender_public_key = sender_public_key
+        self.payed_amount = payed_amount
+        self.payed_token = payed_token
+        self.data = data
+        self.storage = {}
+
+    def serialize(self):
+        json.dumps({
+            "sender_public_key": self.sender_public_key,
+            "payed_amount": self.payed_amount,
+            "payed_token": self.payed_token,
+            "data": self.data,
+            "storage": self.storage
+        })
+
+    @staticmethod
+    def from_dict(source):
+        return Message(
+            sender_public_key=source["sender_public_key"],
+            payed_amount=source["payed_amount"],
+            payed_token=source["payed_token"],
+            data=source["data"],
+            storage=source["storage"]
+        )

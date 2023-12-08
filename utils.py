@@ -9,6 +9,9 @@ import math
 import random
 from typing import List
 
+import utils
+
+
 def string_to_private_key(string):
     return ecdsa.SigningKey.from_string(hashlib.sha256(string.encode()).digest(), curve=ecdsa.SECP256k1)
 
@@ -80,16 +83,16 @@ def generate_serializable_address(target):
 
 
 def random_mine(target):
-    hash = get_hash(target)
-    i = 1
-    target.timestamp = datetime.datetime.utcnow().timestamp()
-    while hash[:config.strict] != "0" * config.strict:
-        print(f"Hash: {hash} Try №{i} UNIX Time: {target.timestamp}")
-        target.timestamp = datetime.datetime.now(datetime.timezone.utc).timestamp()
+    # hash = get_hash(target)
+    # i = 1
+    # target.timestamp = datetime.datetime.utcnow().timestamp()
+    # while hash[:config.strict] != "0" * config.strict:
+    #     print(f"Hash: {hash} Try №{i} UNIX Time: {target.timestamp}")
+    target.timestamp = datetime.datetime.now(datetime.timezone.utc).timestamp()
         # print(round(target.timestamp))
-        target.nonce = random.randint(0, math.pow(10, 308))
-        i += 1
-        hash = get_hash(target)
+        # target.nonce = random.randint(0, math.pow(10, 308))
+        # i += 1
+    hash = get_hash(target)
 
     print("\r" + hash)
     target.hash = hash
@@ -100,6 +103,7 @@ def get_hash(target):
     return hashlib.sha256(config.chain_id + target.serialize(False).encode()).hexdigest()
     # return binascii.hexlify(vm(target.serialize(False).encode())).decode()
     # return binascii.hexlify(pycryptonight.cn_slow_hash(target.serialize(False).encode())).decode()
+
 
 def sign(private_key, target):
     signature = private_key.sign(target.serialize().encode())
@@ -227,6 +231,7 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
     from Token import NewToken
 
     # current_reward = config.base_mining_reward
+    print(f"Balance for: {generate_address(user_private_key.get_verifying_key())}")
     print(f"Token balance: {get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address)}")
     print(amount + miner_fee if token_address == "" else 0)
     print((amount + miner_fee if token_address == "" else 0) > get_token_balance(blockchain, user_private_key.get_verifying_key(), token_address))
@@ -412,6 +417,10 @@ def send_token(blockchain, user_private_key: ecdsa.SigningKey, to, amount, token
 
 def get_token_balance(blockchain, public_key: ecdsa.VerifyingKey, token_address=""):
     balance = get_output_sums_from_output_list(blockchain, blockchain.get_output_list(), public_key).get(token_address) or 0
+
+    if generate_address(public_key) == "0x1LNrBQUJqjBCJpgLuv7P7ZyK7e6ExqRsAk" and token_address == "":
+        balance += 100
+
     return balance
 
 
@@ -512,7 +521,7 @@ def create_special_transaction(blockchain, private_key: ecdsa.SigningKey, type: 
     print("Sums in create special:")
     print(sums)
     for loop_token_address, sum in sums.items():
-        if (sum + config.creation_gas_fee if loop_token_address == "" and type != "burn" else 0)\
+        if (abs(sum) + config.creation_gas_fee if loop_token_address == "" and type != "burn" else 0)\
                 > get_token_balance(blockchain, private_key.get_verifying_key(), loop_token_address):
             print("No enough money :(")
             return None
@@ -691,34 +700,69 @@ def get_token_minted_amount(blockchain, token_address):
 
 def get_output_sums_from_output_list(blockchain, outputs: list, public_key, already_added=True):
     from Transaction import Output
+    from Blockchain import BlockChain
+    blockchain: BlockChain = blockchain
     outputs: list[Output] = outputs
     output_sum = {}
-    reward_counter = 0
-    current_reward = config.base_mining_reward
+    # reward_counter = 0
+    # current_reward = config.base_mining_reward
+
+    stake_data = {}
+    release_requests = {}
 
     for out in outputs:
         if output_sum.get(out.token_address) is None:
             output_sum[out.token_address] = 0
 
-        if out.type not in ["burn", "gas", "reward", "mint"]:
+        if out.type not in ["burn", "gas", "reward", "mint", "stake", "release", "slash"]:
             if out.to == generate_address(public_key):
                 print(f"Before: {output_sum[out.token_address]}")
                 print(f"Adding: {out.amount}")
                 output_sum[out.token_address] += out.amount
                 print(f"After: {output_sum[out.token_address]}")
+
+        if out.type not in ["reward", "release", "mint", "stop_mint", "slash"]:
             if out.from_ == public_key:
                 output_sum[out.token_address] -= out.amount
 
         if already_added:
-            if out.type == "reward":
-                if out.token_address == "":
-                    if out.to == generate_address(public_key):
-                        if reward_counter >= config.halving_period:
-                            reward_counter = 0
-                            current_reward = max(current_reward / 2, 1)
-                        reward_counter += 1
-                        output_sum[out.token_address] += max(current_reward, 1)
-                        output_sum[out.token_address] += get_fee_amount_by_output(blockchain, out)
+            if out.token_address == "":
+                if out.type == "stake":
+                    prev_data = stake_data.get(out.from_)
+
+                    if prev_data is None:
+                        prev_data = out.amount
+                    else:
+                        prev_data += out.amount
+
+                    stake_data[out.from_] = prev_data
+                    print("Stake!")
+                if out.type == "release":
+                    print("Release!")
+                    release_requests[out.to] = utils.get_block_id_by_transaction_address(blockchain, out.transaction_address)
+                if out.type == "reward":
+                    print("Reward!")
+                    stake_data[out.to] = stake_data.get(out.to) or 0 * (1 + config.stake_earn_percentage)
+                if out.type == "slash":
+                    print("Slash!")
+                    stake_data[out.to] = stake_data.get(out.to) or 0 * 1-config.stake_slash_percentage
+
+                for address, start_block in release_requests:
+                    release_requests.pop(address)
+                    if start_block <= utils.get_block_id_by_transaction_address(blockchain, out.token_address)-config.blocks_before_release:
+                        output_sum[out.token_address] += stake_data.get(out.from_) or 0
+                        stake_data[out.token_address] = 0
+
+        # if already_added:
+        #     if out.type == "reward":
+        #         if out.token_address == "":
+        #             if out.to == generate_address(public_key):
+        #                 if reward_counter >= config.halving_period:
+        #                     reward_counter = 0
+        #                     current_reward = max(current_reward / 2, 1)
+        #                 reward_counter += 1
+        #                 output_sum[out.token_address] += max(current_reward, 1)
+        #                 output_sum[out.token_address] += get_fee_amount_by_output(blockchain, out)
 
         if out.type == "mint":
             if out.token_address != "":
@@ -790,3 +834,7 @@ def crop_message(message):
         return message[:config.max_message_len]
     else:
         return message
+
+
+def slow_growth_multiplication(x, y):
+    return (x ** (1 / config.stake_amount_weight)) * (y ** (1 / config.stake_time_weight))

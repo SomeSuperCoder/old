@@ -18,6 +18,7 @@ class NewBlock:
         self.nonce = nonce
         self.timestamp = timestamp
         self.message = message
+        # self.signature = signature
         self.sc_data = {}
 
     def serialize(self, strict=False):
@@ -39,8 +40,9 @@ class NewBlock:
                 "timestamp": self.timestamp,
                 "message": base64.b64encode(self.message.encode()).decode(),
                 "sc_data": self.sc_data,
+                "nonce": self.nonce,
                 "hash": self.hash,
-                "nonce": self.nonce
+                # "signature": self.signature
             })
 
     @staticmethod
@@ -63,3 +65,9 @@ class NewBlock:
 
     def get_size(self):
         return len(self.serialize(True).encode('utf-8'))
+
+    def get_owner_public_key(self):
+        for tx in self.transactions:
+            for out in tx.outputs:
+                if out.type == "reward":
+                    return tx.public_key

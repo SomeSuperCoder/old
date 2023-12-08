@@ -1,6 +1,7 @@
-/get_blockchain_variants
+/get_blockchain_variants # Do not use in PoS!
 /get_current_blockchain
 /new_transaction
 /new_block
 /get_other_node_list
 /get_node_type
+/get_balance_of

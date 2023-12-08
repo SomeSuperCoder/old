@@ -117,7 +117,7 @@ class Input:
 
 
 class Output:
-    def __init__(self, from_, to, amount, token_address, type):
+    def __init__(self, from_, to, amount, token_address, type, pof=None):
         if builtins.type(from_) is str and from_ != "":
             self.from_ = utils.string_to_public_key(from_)
         else:
@@ -128,6 +128,7 @@ class Output:
         self.token_address = token_address
         self.type = type
         self.transaction_address = None
+        self.pof = pof
 
     def serialize(self):
         return json.dumps({
@@ -135,7 +136,8 @@ class Output:
             "to": self.to,
             "amount": abs(self.amount),
             "token_address": self.token_address,
-            "type": self.type
+            "type": self.type,
+            "pof": self.pof
         })
 
     @staticmethod

@@ -22,19 +22,29 @@ class Validator:
             else:
                 break
 
-        latest_timestamps = [i.timestamp for i in blockchain.get_latest_blocks(config.amount_of_last_blocks_for_checks)]
+        latest_timestamps = [NewBlock.from_dict(i).timestamp for i in blockchain.get_latest_blocks(config.amount_of_last_blocks_for_checks)]
         if block.id != blockchain.get_latest_block_id()+1:
+            print("Block id!")
             return True
         if block.previous_block_hash != blockchain.get_latest_hash():
+            print("Prev hash!")
             return True
         if block.timestamp < statistics.median(latest_timestamps):
+            print("Timestamp is too small")
             return True
-        if block.timestamp > datetime.datetime.utcnow() + config.room_for_timestamp_error:
+        if datetime.datetime.utcfromtimestamp(block.timestamp).replace(tzinfo=datetime.timezone.utc) > datetime.datetime.now(datetime.timezone.utc) + config.room_for_timestamp_error:
+            print("Timestamp is too big")
             return True
-        if block_zeros < blockchain.get_current_difficulty():
-            return True
+        # if block_zeros < blockchain.get_current_difficulty():
+        #     return True
         if block.get_size() > config.max_block_size:
-            return False
+            print("Invalid block size!")
+            return True
+        # if not utils.verify(block):
+        #     print("Block signature verification failed!")
+        #     return True
+
+        return False
 
     @staticmethod
     def check_only_one_block_reward(block):
@@ -109,6 +119,7 @@ class Validator:
                     print("check if send outputs follow token rules")
                     return True
 
+            # allow only the token owner to mint or stop_mint
             if out.type in ["mint", "stop_mint"]:
                 token_owner = None
                 for i in blockchain.get_token_list():
@@ -117,9 +128,10 @@ class Validator:
                         break
 
                 if utils.generate_address(transaction.public_key) != token_owner:
-                    print("Token signature verify error")
+                    print("Token owner verify error")
                     return True
 
+            # double
             # do the non-negative check
             if out.amount < 0:
                 print("do the non-negative check")
@@ -130,8 +142,9 @@ class Validator:
                 print("check decimals for non-native")
                 return True
 
+            # double
             # check from is set only to the transaction public key
-            if out.from_ != transaction.public_key:
+            if out.from_ != transaction.public_key and out.from_ not in ["mint", "stop_mint", "reward", "slash", "release"]:
                 print("check from is set only to the transaction public key")
                 return True
 
@@ -139,6 +152,15 @@ class Validator:
             if out.type == "fee":
                 print("allow miner fee only in Neon")
                 return True
+
+            # disallow non-native token staking
+            if out.type in ["stake", "release", "slash", "reward"]:
+                print("disallow non-native token staking")
+
+            # double
+            # the output transaction address should match the transaction address
+            if out.transaction_address != transaction.address:
+                print("the output transaction address should match the transaction address")
 
         for out in all_native:
             # check decimals for NATIVE
@@ -150,47 +172,37 @@ class Validator:
             if out.type in ["mint", "stop_mint"]:
                 return True
 
-        # # check if the transaction inputs are not bigger than the outputs
-        # print("Transaction outputs:")
-        # sorted_ins = utils.sort_inputs_by_output_token_address(blockchain, transaction.inputs)
-        # sorted_outs = utils.sort_outputs_by_output_token_address(blockchain, transaction.outputs)
-        # print(sorted_ins)
-        #
-        # sums_for_outs = {}
-        # sums_for_ins = {}
-        #
-        # for token_address in sorted_ins.keys():
-        #     sums_for_ins[token_address] = utils.get_output_sum_from_input_list(blockchain, sorted_ins[token_address])
-        # print(f"sorted_outs: {sorted_outs}")
-        # for token_address in sorted_outs.keys():
-        #     print(f"Some token_address: {token_address}")
-        #     print(f"Some index get: {sorted_outs[token_address]}")
-        #     sums_for_outs[token_address] = utils.get_output_sum_from_output_list(blockchain, sorted_outs[token_address])
-        #
-        # print(sums_for_ins)
-        # print(sums_for_outs)
-        #
-        # print("Before for capybara top")
-        #
-        # for token_address, amount in sums_for_outs.items():
-        #     print("="*20)
-        #     print("IN IO CHECKER")
-        #     # print(sums_for_ins[token_address])
-        #     if sums_for_ins.get(token_address) is None:
-        #         continue
-        #     print(amount)
-        #     print("="*20)
-        #     if sums_for_ins[token_address] < amount:
-        #         print("check if the transaction inputs are not smaller than the outputs")
-        #         return True
-        #
-        # print("END")
+            # double
+            # check from is set only to the transaction public key
+            if out.from_ != transaction.public_key:
+                print("check from is set only to the transaction public key")
+                return True
 
-        # # check if transaction inputs are real
-        # for _in in transaction.inputs:
-        #     if utils.input_to_output(blockchain, _in) is None:
-        #         print("check if transaction inputs are real")
-        #         return True
+            # double
+            # do the non-negative check
+            if out.amount < 0:
+                print("do the non-negative check")
+                return True
+
+            # double
+            # the output transaction address should match the transaction address
+            if out.transaction_address != transaction.address:
+                print("the output transaction address should match the transaction address")
+
+            if out.type == "slash":
+                from Block import NewBlock
+                object_pof = NewBlock.from_dict(out.pof)
+                # check PoF
+                if not Validator.block_is_fraudulent(blockchain,object_pof):
+                    print("Check PoF")
+                    return True
+                # disallow duplicate pof
+                if utils.get_hash(object_pof) in blockchain.get_pof_hash_list():
+                    print("Disallow duplicate pof")
+                    return True
+
+            if out.type != "slash" and out.pof is not None:
+                return True
 
         # check if the user has enough money
         each_token_spent = utils.get_output_sums_from_output_list(blockchain, transaction.outputs, public_key=transaction.public_key, already_added=False)
